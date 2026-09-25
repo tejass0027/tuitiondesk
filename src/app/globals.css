@@ -126,8 +126,9 @@
   --danger: oklch(0.74 0.15 25);
   --danger-soft: oklch(0.32 0.07 25);
 
-  --chart-1: oklch(0.7 0.14 152);
-  --chart-2: oklch(0.8 0.14 80);
+  /* validated for the dark card surface (lightness band + colour-blind separation) */
+  --chart-1: oklch(0.52 0.12 152);
+  --chart-2: oklch(0.66 0.14 75);
   --chart-3: oklch(0.7 0.15 274);
   --chart-4: oklch(0.7 0.17 25);
   --chart-5: oklch(0.6 0.02 60);
