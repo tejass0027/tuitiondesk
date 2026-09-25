@@ -31,7 +31,7 @@ export default async function MorePage() {
             href={href}
             className="flex items-center gap-4 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-foreground/8 transition-colors hover:bg-muted/60"
           >
-            <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground">
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/25">
               <Icon className="size-6" aria-hidden />
             </span>
             <span className="min-w-0 flex-1">

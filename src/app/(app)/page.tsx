@@ -9,6 +9,7 @@ import {
   CircleCheck,
   Layers,
   PartyPopper,
+  NotebookPen,
   ReceiptIndianRupee,
   TrendingDown,
   UserPlus,
@@ -17,7 +18,7 @@ import { getCentre } from "@/lib/auth";
 import { WEEK_DAYS, dayKeyOf, formatTimeRange } from "@/lib/batches";
 import { formatDate, formatINR, formatMonth, todayIST } from "@/lib/format";
 import { summarizeFees } from "@/lib/fees";
-import { feeSeries, lastMonths, lowAttendance } from "@/lib/dashboard";
+import { feeSeries, formatINRShort, lastMonths, lowAttendance } from "@/lib/dashboard";
 import { groupOverdueByStudent } from "@/lib/reminders";
 import { feeReminderMessage } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
@@ -85,13 +86,41 @@ export default async function HomePage() {
 
   return (
     <div className="grid grid-cols-1 gap-6">
-      <header className="pt-1">
-        <p className="text-base font-medium text-muted-foreground">
+      {/* Welcome card */}
+      <header className="relative isolate overflow-hidden rounded-3xl bg-[#1e1b4b] p-5 text-white shadow-xl shadow-indigo-900/20 sm:p-6">
+        <div aria-hidden className="absolute inset-0 -z-10 bg-linear-to-br from-indigo-700 via-indigo-600 to-violet-600" />
+        <div aria-hidden className="absolute -top-20 -right-16 -z-10 size-64 rounded-full bg-fuchsia-400/30 blur-3xl" />
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10 opacity-[0.1] [background-image:linear-gradient(to_right,white_1px,transparent_1px),linear-gradient(to_bottom,white_1px,transparent_1px)] [background-size:32px_32px] [mask-image:linear-gradient(to_bottom,black,transparent)]"
+        />
+        <p className="text-sm font-semibold text-indigo-100/90">
           {weekday}, {formatDate(today)}
         </p>
-        <h1 className="text-[1.75rem] leading-tight font-bold">Namaste 🙏</h1>
-        <p className="text-base text-muted-foreground">{centre.name}</p>
+        <h1 className="mt-1 text-[1.9rem] leading-tight font-extrabold tracking-tight">Namaste 🙏</h1>
+        <p className="text-base text-indigo-100/90">{centre.name}</p>
+
+        {hasBatches && hasStudents && (
+          <dl className="mt-5 grid grid-cols-3 gap-2">
+            <HeroStat
+              label="Classes today"
+              value={`${todaysBatches.filter((b) => b.done).length}/${todaysBatches.length}`}
+              note="marked"
+            />
+            <HeroStat label="Collected" value={formatINRShort(thisMonth.collected)} note={`${thisMonth.percent}% of month`} />
+            <HeroStat label="Overdue" value={String(overdue.length)} note={overdue.length === 1 ? "student" : "students"} />
+          </dl>
+        )}
       </header>
+
+      {hasBatches && hasStudents && (
+        <nav aria-label="Quick actions" className="grid grid-cols-4 gap-2">
+          <QuickAction href="/attendance" icon={CalendarCheck} label="Attendance" tone="from-emerald-500 to-teal-600" />
+          <QuickAction href="/students/new" icon={UserPlus} label="Add student" tone="from-sky-500 to-indigo-600" />
+          <QuickAction href="/fees" icon={ReceiptIndianRupee} label="Fees" tone="from-amber-500 to-orange-600" />
+          <QuickAction href="/tests/new" icon={NotebookPen} label="New test" tone="from-fuchsia-500 to-violet-600" />
+        </nav>
+      )}
 
       {!hasBatches || !hasStudents ? (
         <GettingStarted hasBatches={hasBatches} />
@@ -273,9 +302,9 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl bg-card p-5 shadow-sm ring-1 ring-foreground/8">
+    <section className="rounded-3xl bg-card p-5 shadow-sm ring-1 ring-foreground/8">
       <div className="mb-4 flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/25">
           <Icon className="size-5" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
@@ -364,5 +393,39 @@ function GettingStarted({ hasBatches }: { hasBatches: boolean }) {
         </Button>
       )}
     </section>
+  );
+}
+
+function HeroStat({ label, value, note }: { label: string; value: string; note: string }) {
+  return (
+    <div className="rounded-2xl bg-white/12 p-3 ring-1 ring-white/15 backdrop-blur">
+      <dt className="text-[11px] font-semibold tracking-wide text-indigo-100/85 uppercase">{label}</dt>
+      <dd className="mt-0.5 text-xl leading-tight font-extrabold">{value}</dd>
+      <dd className="truncate text-xs text-indigo-100/80">{note}</dd>
+    </div>
+  );
+}
+
+function QuickAction({
+  href,
+  icon: Icon,
+  label,
+  tone,
+}: {
+  href: string;
+  icon: typeof CalendarCheck;
+  label: string;
+  tone: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group flex flex-col items-center gap-2 rounded-2xl bg-card px-1 py-3 text-center shadow-sm ring-1 ring-foreground/8 transition-all hover:-translate-y-0.5 hover:shadow-md"
+    >
+      <span className={`flex size-11 items-center justify-center rounded-2xl bg-linear-to-br text-white shadow-md ${tone}`}>
+        <Icon className="size-5.5" aria-hidden />
+      </span>
+      <span className="text-[0.8rem] leading-tight font-semibold">{label}</span>
+    </Link>
   );
 }

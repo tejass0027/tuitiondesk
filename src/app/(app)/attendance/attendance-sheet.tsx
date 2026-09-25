@@ -128,7 +128,7 @@ export function AttendanceSheet({ batchId, batchName, centreName, today, date, s
       </ul>
 
       {/* Save bar: sits just above the bottom tabs on phones */}
-      <div className="sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 mt-2 lg:bottom-6">
+      <div className="sticky bottom-[calc(6rem+env(safe-area-inset-bottom))] z-30 mt-2 lg:bottom-6">
         <div className="rounded-2xl bg-background/80 p-1 backdrop-blur">
           {isDirty ? (
             <Button size="lg" className="w-full shadow-lg shadow-primary/25" onClick={save} disabled={pending}>
