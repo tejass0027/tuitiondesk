@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -16,13 +17,15 @@ import type { Batch, Student } from "@/types/database";
 type StudentFormProps = {
   action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
   batches: Pick<Batch, "id" | "name" | "monthly_fee">[];
+  /** The centre's class list (More → Classes). Empty = free text box. */
+  classNames: string[];
   student?: Student;
   defaultBatchId?: string;
   submitLabel: string;
 };
 
 /** Shared by "Add student" and "Edit student". */
-export function StudentForm({ action, batches, student, defaultBatchId, submitLabel }: StudentFormProps) {
+export function StudentForm({ action, batches, classNames, student, defaultBatchId, submitLabel }: StudentFormProps) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(action, null);
   useActionToast(state, (s) => router.push(`/students/${s.id}`));
@@ -62,15 +65,13 @@ export function StudentForm({ action, batches, student, defaultBatchId, submitLa
         />
       </FormField>
 
-      <div className="grid grid-cols-[7rem_1fr] gap-3">
-        <FormField label="Class" htmlFor="class" error={errors?.class}>
-          <Input
-            id="class"
-            name="class"
-            placeholder="10th"
-            defaultValue={typed?.class ?? student?.class}
-          />
-        </FormField>
+      <ClassField
+        classNames={classNames}
+        current={typed?.class ?? student?.class ?? ""}
+        error={errors?.class}
+      />
+
+      <div className="grid gap-3">
         <FormField label="Batch" htmlFor="batch_id" error={errors?.batch_id}>
           <NativeSelect
             id="batch_id"
@@ -171,5 +172,44 @@ export function StudentForm({ action, batches, student, defaultBatchId, submitLa
         {submitLabel}
       </SubmitButton>
     </form>
+  );
+}
+
+/** Class picker from the centre's list, or a text box if no list is set up yet. */
+function ClassField({ classNames, current, error }: { classNames: string[]; current: string; error?: string[] }) {
+  if (classNames.length === 0) {
+    return (
+      <FormField label="Class" htmlFor="class" error={error}>
+        <Input id="class" name="class" placeholder="e.g. Class 10" defaultValue={current} />
+        <p className="text-sm text-muted-foreground">
+          Tip:{" "}
+          <Link href="/classes" className="font-semibold text-primary hover:underline">
+            set up your classes
+          </Link>{" "}
+          once and pick from a list.
+        </p>
+      </FormField>
+    );
+  }
+
+  // Keep a student's old class selectable even if it's no longer in the list
+  const options = current && !classNames.some((n) => n.toLowerCase() === current.toLowerCase())
+    ? [current, ...classNames]
+    : classNames;
+
+  return (
+    <FormField label="Class" htmlFor="class" error={error}>
+      <NativeSelect id="class" name="class" defaultValue={options.find((n) => n.toLowerCase() === current.toLowerCase()) ?? ""}>
+        <option value="">No class</option>
+        {options.map((n) => (
+          <option key={n} value={n}>
+            {n}
+          </option>
+        ))}
+      </NativeSelect>
+      <Link href="/classes" className="text-sm font-semibold text-primary hover:underline">
+        Add or edit classes
+      </Link>
+    </FormField>
   );
 }

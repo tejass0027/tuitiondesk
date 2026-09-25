@@ -3,12 +3,14 @@ import Link from "next/link";
 import { ChevronRight, Plus, SearchX, Users } from "lucide-react";
 import { getCentre } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { classLabel } from "@/lib/classes";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InitialsAvatar } from "@/components/shared/initials-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StudentSearch } from "./student-search";
+import { ClassFilter } from "@/components/shared/class-filter";
 
 export const metadata: Metadata = { title: "Students" };
 
@@ -16,6 +18,7 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
   const params = await searchParams;
   const q = typeof params.q === "string" ? params.q.trim() : "";
   const batchFilter = typeof params.batch === "string" ? params.batch : "";
+  const classFilter = typeof params.class === "string" ? params.class : "";
 
   const { supabase } = await getCentre();
 
@@ -25,16 +28,18 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
     .order("is_active", { ascending: false })
     .order("name");
   if (batchFilter) query = query.eq("batch_id", batchFilter);
+  if (classFilter) query = query.ilike("class", classFilter.replace(/[%_\\]/g, ""));
   if (q) {
     // strip characters that have a meaning in PostgREST filters
     const safe = q.replace(/[,()*%\\]/g, " ");
     query = query.or(`name.ilike.%${safe}%,parent_name.ilike.%${safe}%`);
   }
 
-  const [{ data: students }, { data: batches }, { count: totalCount }] = await Promise.all([
+  const [{ data: students }, { data: batches }, { count: totalCount }, { data: classes }] = await Promise.all([
     query,
     supabase.from("batches").select("id, name").eq("is_active", true).order("name"),
     supabase.from("students").select("id", { count: "exact", head: true }),
+    supabase.from("classes").select("name, sort_order").order("sort_order").order("name"),
   ]);
 
   const addHref = batchFilter ? `/students/new?batch=${batchFilter}` : "/students/new";
@@ -46,7 +51,7 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
       <PageHeader
         title="Students"
         description={
-          hasNoStudentsAtAll ? undefined : `${activeCount} active${q || batchFilter ? " shown" : ""}`
+          hasNoStudentsAtAll ? undefined : `${activeCount} active${q || batchFilter || classFilter ? " shown" : ""}`
         }
         action={
           !hasNoStudentsAtAll && (
@@ -76,16 +81,24 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
         <div className="grid grid-cols-1 gap-4">
           <StudentSearch />
 
+          {classes && classes.length > 0 && (
+            <ClassFilter
+              classes={classes.map((c) => c.name)}
+              selected={classFilter}
+              hrefFor={(cls) => hrefWith(q, batchFilter, cls)}
+            />
+          )}
+
           {batches && batches.length > 1 && (
             <nav
               aria-label="Filter by batch"
               className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0"
             >
-              <FilterChip href={hrefWith(q, "")} active={!batchFilter}>
+              <FilterChip href={hrefWith(q, "", classFilter)} active={!batchFilter}>
                 All batches
               </FilterChip>
               {batches.map((b) => (
-                <FilterChip key={b.id} href={hrefWith(q, b.id)} active={batchFilter === b.id}>
+                <FilterChip key={b.id} href={hrefWith(q, b.id, classFilter)} active={batchFilter === b.id}>
                   {b.name}
                 </FilterChip>
               ))}
@@ -123,7 +136,7 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
                         {!s.is_active && <Badge variant="secondary">Left</Badge>}
                       </div>
                       <p className="truncate text-[0.95rem] text-muted-foreground">
-                        {[s.class && `Class ${s.class}`, s.batches?.name].filter(Boolean).join(" · ")}
+                        {[s.class && classLabel(s.class), s.batches?.name].filter(Boolean).join(" · ")}
                       </p>
                     </div>
                     <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
@@ -138,10 +151,11 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
   );
 }
 
-function hrefWith(q: string, batch: string) {
+function hrefWith(q: string, batch: string, cls = "") {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
   if (batch) params.set("batch", batch);
+  if (cls) params.set("class", cls);
   const s = params.toString();
   return s ? `/students?${s}` : "/students";
 }

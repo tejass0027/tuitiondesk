@@ -24,6 +24,7 @@ import type { FeeOverview } from "@/types/database";
 import { ReminderSheet } from "@/components/reminders/reminder-sheet";
 import { feeReminderMessage } from "@/lib/whatsapp";
 import { PaymentSheet } from "./payment-sheet";
+import { ClassFilter } from "@/components/shared/class-filter";
 
 export const metadata: Metadata = { title: "Fees" };
 
@@ -40,13 +41,14 @@ export default async function FeesPage({ searchParams }: PageProps<"/fees">) {
   const currentMonth = today.slice(0, 7);
   const month = isISOMonth(params.month) && params.month <= currentMonth ? params.month : currentMonth;
   const monthStart = `${month}-01`;
+  const classFilter = typeof params.class === "string" ? params.class : "";
 
   const { supabase, centre } = await getCentre();
 
   // Make sure every active student has this month's fee entry (safe to repeat)
   await supabase.rpc("generate_monthly_fees");
 
-  const [{ data: monthRows }, { data: overdueRows }, { count: studentCount }] = await Promise.all([
+  const [{ data: monthRowsAll }, { data: overdueRowsAll }, { count: studentCount }, { data: classes }] = await Promise.all([
     supabase.from("fee_overview").select("*").eq("month", monthStart).order("student_name"),
     // Overdue includes older months that are still unpaid
     supabase
@@ -57,10 +59,17 @@ export default async function FeesPage({ searchParams }: PageProps<"/fees">) {
       .order("month")
       .order("student_name"),
     supabase.from("students").select("id", { count: "exact", head: true }),
+    supabase.from("classes").select("name, sort_order").order("sort_order").order("name"),
   ]);
 
-  const rows = monthRows ?? [];
-  const overdue = overdueRows ?? [];
+  // Optional ?class= filter (matches the student's class, any capitalisation)
+  const inClass = (r: { student_class: string }) =>
+    !classFilter || r.student_class.trim().toLowerCase() === classFilter.toLowerCase();
+  const monthRows = (monthRowsAll ?? []).filter(inClass);
+  const overdueRows = (overdueRowsAll ?? []).filter(inClass);
+
+  const rows = monthRows;
+  const overdue = overdueRows;
   const byTab: Record<TabKey, FeeOverview[]> = {
     due: rows.filter((r) => r.status === "due"),
     overdue,
@@ -97,7 +106,8 @@ export default async function FeesPage({ searchParams }: PageProps<"/fees">) {
   const olderOverdue = overdue.filter((r) => r.month < monthStart);
   const olderOverdueTotal = olderOverdue.reduce((s, r) => s + Number(r.balance), 0);
 
-  const hrefFor = (m: string, t: TabKey = tab) => `/fees?month=${m}&tab=${t}`;
+  const hrefFor = (m: string, t: TabKey = tab, cls = classFilter) =>
+    `/fees?month=${m}&tab=${t}${cls ? `&class=${encodeURIComponent(cls)}` : ""}`;
 
   if (studentCount === 0) {
     return (
@@ -137,6 +147,12 @@ export default async function FeesPage({ searchParams }: PageProps<"/fees">) {
           </span>
         )}
       </div>
+
+      {classes && classes.length > 0 && (
+        <div className="mt-3">
+          <ClassFilter classes={classes.map((c) => c.name)} selected={classFilter} hrefFor={(cls) => hrefFor(month, tab, cls)} />
+        </div>
+      )}
 
       {/* Totals */}
       <section aria-label="Month totals" className="mt-4 rounded-2xl bg-card p-5 shadow-sm ring-1 ring-foreground/8">

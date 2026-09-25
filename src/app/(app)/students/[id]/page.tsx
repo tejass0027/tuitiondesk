@@ -13,6 +13,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { classLabel } from "@/lib/classes";
 import { paymentModeLabel } from "@/lib/fees";
 import { PaymentSheet } from "@/app/(app)/fees/payment-sheet";
 import { RemovePaymentButton } from "./remove-payment-button";
@@ -97,7 +98,7 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
         <InitialsAvatar name={student.name} className="size-16 text-xl" />
         <div className="min-w-0 flex-1">
           <p className="text-lg font-semibold">
-            {[student.class && `Class ${student.class}`, student.batches?.name].filter(Boolean).join(" · ")}
+            {[student.class && classLabel(student.class), student.batches?.name].filter(Boolean).join(" · ")}
           </p>
           <p className="text-[0.95rem] text-muted-foreground">
             Joined {formatDate(student.joining_date)} · {formatINR(student.monthly_fee)}/month

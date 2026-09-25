@@ -392,6 +392,12 @@ export type Database = {
           },
         ];
       };
+      classes: {
+        Row: { id: string; centre_id: string; name: string; sort_order: number; created_at: string };
+        Insert: { id?: string; centre_id?: string; name: string; sort_order?: number; created_at?: string };
+        Update: { id?: string; centre_id?: string; name?: string; sort_order?: number; created_at?: string };
+        Relationships: [];
+      };
     };
     Views: {
       fee_overview: {
@@ -432,6 +438,10 @@ export type Database = {
       };
     };
     Functions: {
+      rename_class: {
+        Args: { p_class_id: string; p_new_name: string };
+        Returns: undefined;
+      };
       generate_monthly_fees: {
         Args: { p_month?: string };
         Returns: number;
@@ -471,6 +481,7 @@ export type FeeRecord = Tables<"fee_records">;
 export type Payment = Tables<"payments">;
 export type ReminderLog = Tables<"reminder_logs">;
 export type Test = Tables<"tests">;
+export type ClassItem = Tables<"classes">;
 export type TestMark = Tables<"test_marks">;
 export type FeeOverview = Views<"fee_overview">;
 export type PaymentMode = Enums<"payment_mode">;

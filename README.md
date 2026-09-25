@@ -31,6 +31,7 @@ Parents don't need an account. They simply receive WhatsApp messages from the ow
 | Area | What you can do |
 |---|---|
 | **Sign up & centre** | Sign up with email + password, centre name, phone and address. Each owner only ever sees their own centre (enforced by Postgres row-level security). |
+| **Classes** | Set up your class list once (one tap adds Class 1 to 12, Class 6 to 10, PUC 1 & 2 or JEE / NEET), rename or remove classes, then pick a class when adding students and filter the student list and fees by class. |
 | **Batches** | Create batches like "Class 10 Maths – Evening" with days, timings and a monthly fee. Archive old batches without losing history. |
 | **Students** | Add students with class, batch, parent name and WhatsApp number. The fee is filled in from the batch and can be lowered for discounts. Search by student or parent name, filter by batch. |
 | **Student profile** | Parent contact (call / WhatsApp), attendance %, a monthly attendance calendar, and full fee + payment history. |
@@ -94,6 +95,7 @@ Migrations live in [`supabase/migrations`](supabase/migrations):
 | `…_tables.sql` | `centres`, `batches`, `students`, `attendance`, `fee_records`, `payments`, `reminder_logs`: foreign keys, checks and indexes |
 | `…_rls.sql` | Row-level security on every table + the `my_centre_id()` helper |
 | `…_functions.sql` | Signup trigger (creates the centre), `generate_monthly_fees()`, `today_ist()`, and the `fee_overview` and `student_attendance_stats` views |
+| `…_classes.sql` | The centre's class list, with RLS and a `rename_class()` function that renames a class on every student too |
 | `…_tests_and_marks.sql` | `tests` and `test_marks` with RLS, plus triggers that stop marks going above a test's maximum |
 
 ```
@@ -123,7 +125,7 @@ npm install
 ### 3. Create the Supabase project and database
 
 1. Create a new project at [supabase.com](https://supabase.com/dashboard).
-2. Open **SQL Editor** and run every file in `supabase/migrations/` **in order** (tables → rls → functions → tests_and_marks).
+2. Open **SQL Editor** and run every file in `supabase/migrations/` **in order** (tables → rls → functions → tests_and_marks → classes).
    *(Or with the Supabase CLI: `npx supabase link` then `npx supabase db push`.)*
 3. For local testing you can turn off **Authentication → Sign In / Providers → Email → Confirm email**, so new sign-ups are logged in immediately. Turn it back on for production.
 

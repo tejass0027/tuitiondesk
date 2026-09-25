@@ -12,9 +12,10 @@ export default async function EditStudentPage({ params }: PageProps<"/students/[
   const { id } = await params;
   const { supabase } = await getCentre();
 
-  const [{ data: student }, { data: batches }] = await Promise.all([
+  const [{ data: student }, { data: batches }, { data: classes }] = await Promise.all([
     supabase.from("students").select("*").eq("id", id).maybeSingle(),
     supabase.from("batches").select("id, name, monthly_fee, is_active").order("name"),
+    supabase.from("classes").select("name, sort_order").order("sort_order").order("name"),
   ]);
   if (!student) notFound();
 
@@ -27,6 +28,7 @@ export default async function EditStudentPage({ params }: PageProps<"/students/[
       <StudentForm
         action={updateStudent.bind(null, student.id)}
         batches={options}
+        classNames={(classes ?? []).map((c) => c.name)}
         student={student}
         submitLabel="Save changes"
       />

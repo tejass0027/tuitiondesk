@@ -13,6 +13,7 @@ export const metadata: Metadata = { title: "Add student" };
 export default async function NewStudentPage({ searchParams }: PageProps<"/students/new">) {
   const { batch } = await searchParams;
   const { supabase } = await getCentre();
+  const { data: classes } = await supabase.from("classes").select("name, sort_order").order("sort_order").order("name");
   const { data: batches } = await supabase
     .from("batches")
     .select("id, name, monthly_fee")
@@ -39,6 +40,7 @@ export default async function NewStudentPage({ searchParams }: PageProps<"/stude
         <StudentForm
           action={createStudent}
           batches={batches}
+          classNames={(classes ?? []).map((c) => c.name)}
           defaultBatchId={typeof batch === "string" ? batch : undefined}
           submitLabel="Save student"
         />

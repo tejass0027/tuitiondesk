@@ -1,6 +1,7 @@
 import {
   CalendarCheck,
   Ellipsis,
+  GraduationCap,
   House,
   IndianRupee,
   Layers,
@@ -25,6 +26,7 @@ export const PRIMARY_NAV: NavItem[] = [
 /** Pages reached from "More" on phones; shown directly in the desktop sidebar. */
 export const SECONDARY_NAV: NavItem[] = [
   { href: "/tests", label: "Tests & marks", icon: NotebookPen },
+  { href: "/classes", label: "Classes", icon: GraduationCap },
   { href: "/batches", label: "Batches", icon: Layers },
   { href: "/reminders", label: "Reminder log", icon: MessageCircle },
   { href: "/settings", label: "Settings", icon: Settings },

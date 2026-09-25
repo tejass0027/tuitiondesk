@@ -12,7 +12,8 @@ export const metadata: Metadata = { title: "More" };
 
 const DESCRIPTIONS: Record<string, string> = {
   "/tests": "Enter test marks and share results",
-  "/batches": "Classes, timings and monthly fees",
+  "/classes": "Class 1 to 12, JEE, NEET… your list",
+  "/batches": "Timings and monthly fees",
   "/reminders": "Who was reminded and when",
   "/settings": "Centre name, phone, fee due date",
 };

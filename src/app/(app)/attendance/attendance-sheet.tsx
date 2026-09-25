@@ -8,6 +8,7 @@ import { InitialsAvatar } from "@/components/shared/initials-avatar";
 import { ReminderSheet } from "@/components/reminders/reminder-sheet";
 import { absenceMessage } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
+import { classLabel } from "@/lib/classes";
 import type { AttendanceStatus } from "@/types/database";
 import { saveAttendance } from "./actions";
 
@@ -110,7 +111,7 @@ export function AttendanceSheet({ batchId, batchName, centreName, today, date, s
                 <InitialsAvatar name={s.name} />
                 <span className="min-w-0 flex-1">
                   <span className="block text-lg leading-snug font-semibold break-words">{s.name}</span>
-                  {s.class && <span className="block text-sm text-muted-foreground">Class {s.class}</span>}
+                  {s.class && <span className="block text-sm text-muted-foreground">{classLabel(s.class)}</span>}
                 </span>
                 <span
                   className={cn(
