@@ -74,7 +74,7 @@ export function StudentDangerZone({ studentId, studentName, isActive }: Props) {
           <AlertDialogFooter>
             <AlertDialogCancel>Keep student</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-danger text-white hover:bg-danger/90"
+              className="bg-danger text-background hover:bg-danger/90"
               onClick={() => run(() => deleteStudent(studentId), "/students")}
             >
               Delete forever

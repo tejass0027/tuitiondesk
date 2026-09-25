@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarCheck, IndianRupee, MessageCircle, Pencil, Phone, ReceiptIndianRupee } from "lucide-react";
 import { getCentre } from "@/lib/auth";
-import { formatDate, formatINR, formatMonth } from "@/lib/format";
+import { formatDate, formatINR, formatMonth, todayIST } from "@/lib/format";
+import { isISOMonth, monthEnd } from "@/lib/calendar";
+import { AttendanceCalendar } from "@/components/attendance/attendance-calendar";
 import { formatPhone } from "@/lib/phone";
 import { PageHeader } from "@/components/layout/page-header";
 import { InitialsAvatar } from "@/components/shared/initials-avatar";
@@ -14,14 +16,23 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Student" };
 
-export default async function StudentProfilePage({ params }: PageProps<"/students/[id]">) {
+export default async function StudentProfilePage({ params, searchParams }: PageProps<"/students/[id]">) {
   const { id } = await params;
+  const { month: monthParam } = await searchParams;
+  const today = todayIST();
+  const month = isISOMonth(monthParam) && monthParam <= today.slice(0, 7) ? monthParam : today.slice(0, 7);
   const { supabase } = await getCentre();
 
-  const [{ data: student }, { data: stats }, { data: fees }] = await Promise.all([
+  const [{ data: student }, { data: stats }, { data: fees }, { data: monthMarks }] = await Promise.all([
     supabase.from("students").select("*, batches(name)").eq("id", id).maybeSingle(),
     supabase.from("student_attendance_stats").select("*").eq("student_id", id).maybeSingle(),
     supabase.from("fee_overview").select("*").eq("student_id", id).order("month", { ascending: false }),
+    supabase
+      .from("attendance")
+      .select("date, status")
+      .eq("student_id", id)
+      .gte("date", `${month}-01`)
+      .lte("date", monthEnd(month)),
   ]);
 
   if (!student) notFound();
@@ -91,7 +102,7 @@ export default async function StudentProfilePage({ params }: PageProps<"/student
           note={
             attendancePct === null
               ? "Not marked yet"
-              : `${stats!.present_days} of ${stats!.total_days} days`
+              : `${stats!.present_days} of ${stats!.total_days} ${stats!.total_days === 1 ? "day" : "days"}`
           }
           tone={attendancePct !== null && attendancePct < 75 ? "danger" : "default"}
         />
@@ -101,6 +112,17 @@ export default async function StudentProfilePage({ params }: PageProps<"/student
           value={formatINR(pending)}
           note={pending === 0 ? "All clear" : hasOverdue ? "Includes overdue" : "Not yet overdue"}
           tone={hasOverdue ? "danger" : pending > 0 ? "warning" : "success"}
+        />
+      </section>
+
+      {/* Attendance calendar */}
+      <section className="mt-8">
+        <h2 className="mb-3 text-xl font-bold">Attendance</h2>
+        <AttendanceCalendar
+          month={month}
+          today={today}
+          marks={Object.fromEntries((monthMarks ?? []).map((m) => [m.date, m.status]))}
+          hrefForMonth={(m) => `/students/${id}?month=${m}`}
         />
       </section>
 
