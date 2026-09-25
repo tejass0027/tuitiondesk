@@ -18,45 +18,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useActionToast } from "@/hooks/use-action-toast";
-import { CLASS_PRESETS } from "@/lib/classes";
-import { addClass, addPreset, deleteClass, renameClass } from "./actions";
-
-/** One-tap buttons: "Class 1 to 12", "PUC 1 & 2", … */
-export function PresetButtons() {
-  const [busy, setBusy] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
-
-  return (
-    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-      {CLASS_PRESETS.map((p) => (
-        <Button
-          key={p.key}
-          variant="outline"
-          size="lg"
-          disabled={busy !== null}
-          className="h-auto min-h-14 min-w-0 justify-start px-3 py-2 text-left whitespace-normal"
-          onClick={() => {
-            setBusy(p.key);
-            startTransition(async () => {
-              const r = await addPreset(p.key);
-              if (r?.ok) toast.success(r.message);
-              else toast.error(r?.message ?? "Something went wrong");
-              setBusy(null);
-            });
-          }}
-        >
-          {busy === p.key ? <Loader2 className="animate-spin" aria-hidden /> : <Plus aria-hidden />}
-          <span className="flex min-w-0 flex-1 items-center justify-between gap-2 leading-tight">
-            <span>{p.label}</span>
-            <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-              {p.names.length} {p.names.length === 1 ? "class" : "classes"}
-            </span>
-          </span>
-        </Button>
-      ))}
-    </div>
-  );
-}
+import { addClass, deleteClass, renameClass } from "./actions";
 
 /** Type a name like "Class 10 (CBSE)" and add it. */
 export function AddClassForm() {

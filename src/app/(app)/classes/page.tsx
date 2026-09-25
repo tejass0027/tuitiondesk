@@ -4,7 +4,7 @@ import { getCentre } from "@/lib/auth";
 import { compareClassNames } from "@/lib/classes";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
-import { AddClassForm, ClassRow, PresetButtons } from "./class-controls";
+import { AddClassForm, ClassRow } from "./class-controls";
 
 export const metadata: Metadata = { title: "Classes" };
 
@@ -37,13 +37,7 @@ export default async function ClassesPage() {
         )}
 
         <section className="grid gap-3 rounded-3xl bg-card p-5 shadow-sm ring-1 ring-foreground/8">
-          <h2 className="text-lg font-bold">Add many at once</h2>
-          <p className="-mt-2 text-sm text-muted-foreground">Tap a list. Classes you already have are skipped.</p>
-          <PresetButtons />
-        </section>
-
-        <section className="grid gap-3 rounded-3xl bg-card p-5 shadow-sm ring-1 ring-foreground/8">
-          <h2 className="text-lg font-bold">Add one class</h2>
+          <h2 className="text-lg font-bold">Add a class</h2>
           <AddClassForm />
         </section>
 

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getCentre } from "@/lib/auth";
 import type { ActionState } from "@/lib/action-state";
-import { CLASS_PRESETS, cleanClassName, missingNames } from "@/lib/classes";
+import { cleanClassName } from "@/lib/classes";
 
 const nameSchema = z
   .string()
@@ -41,25 +41,6 @@ export async function addClass(_prev: ActionState, formData: FormData): Promise<
 
   refresh();
   return { ok: true, message: `${parsed.data} added` };
-}
-
-export async function addPreset(presetKey: string): Promise<ActionState> {
-  const preset = CLASS_PRESETS.find((p) => p.key === presetKey);
-  if (!preset) return { ok: false, message: "Unknown list." };
-
-  const { supabase } = await getCentre();
-  const { data: existing } = await supabase.from("classes").select("name");
-  const toAdd = missingNames((existing ?? []).map((c) => c.name), preset.names);
-  if (toAdd.length === 0) return { ok: true, message: `All of ${preset.label} are already in your list` };
-
-  const start = await nextOrder(supabase);
-  const { error } = await supabase
-    .from("classes")
-    .insert(toAdd.map((name, i) => ({ name, sort_order: start + i })));
-  if (error) return { ok: false, message: "Could not add these classes." };
-
-  refresh();
-  return { ok: true, message: `Added ${toAdd.length} ${toAdd.length === 1 ? "class" : "classes"}` };
 }
 
 export async function renameClass(classId: string, newName: string): Promise<ActionState> {
