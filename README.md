@@ -6,6 +6,7 @@ Most small coaching centres in India still run on notebooks: one for attendance,
 
 - **Mark a whole batch in seconds.** Everyone starts as Present; tap only the absent ones and press Save.
 - **Know who has paid.** Monthly fees are created automatically. Record cash, UPI or bank payments, including part payments.
+- **Record test marks.** Type a whole class's marks on one screen and share each result with parents.
 - **Remind parents on WhatsApp for free.** Pre-filled messages open in WhatsApp with one tap. No paid API needed.
 - **See everything at a glance.** Today's batches, collections vs pending, overdue fees and low attendance on one home screen.
 
@@ -34,6 +35,7 @@ Parents don't need an account. They simply receive WhatsApp messages from the ow
 | **Student profile** | Parent contact (call / WhatsApp), attendance %, a monthly attendance calendar, and full fee + payment history. |
 | **Attendance** | Pick a date and batch → everyone is Present → tap to mark Absent → one Save. Today's batches are shown first. Saving again updates the same day. |
 | **Fees** | A "due" entry is created every month for every active student. Due / Overdue / Paid tabs, collected vs pending totals, part payments, Undo, and a fee due day you can set. |
+| **Tests & marks** | Create a test for a batch (name, subject, date, out of). Type every student's marks on one screen (Next jumps to the next student), mark absentees, see the class average live, then share each result with parents on WhatsApp. Marks history and average % on the student profile. |
 | **Reminders** | Fee, absence and custom WhatsApp messages from editable templates. "Remind all overdue" goes through parents one by one. Every reminder is logged. |
 | **Dashboard** | Today's batches (marked or not), this month's collections with a 6-month chart, overdue students with quick Remind, and students below 75% attendance. |
 | **Design** | Mobile-first with a bottom tab bar, big tap targets and 17px base text. Light & dark mode, ₹ with Indian digit grouping (₹1,00,000), dates as `25 Sep 2026`, loading skeletons, toasts after every save, friendly empty states. Status is always colour **and** icon **and** label. |
@@ -89,11 +91,13 @@ Migrations live in [`supabase/migrations`](supabase/migrations):
 | `…_tables.sql` | `centres`, `batches`, `students`, `attendance`, `fee_records`, `payments`, `reminder_logs`: foreign keys, checks and indexes |
 | `…_rls.sql` | Row-level security on every table + the `my_centre_id()` helper |
 | `…_functions.sql` | Signup trigger (creates the centre), `generate_monthly_fees()`, `today_ist()`, and the `fee_overview` and `student_attendance_stats` views |
+| `…_tests_and_marks.sql` | `tests` and `test_marks` with RLS, plus triggers that stop marks going above a test's maximum |
 
 ```
 centres ─┬─< batches ─┬─< students ─┬─< attendance
          │            │             ├─< fee_records ─< payments
-         │            │             └─< reminder_logs
+         │            │             ├─< reminder_logs
+         │            └─< tests ──────┴─< test_marks
 ```
 
 ---
@@ -116,7 +120,7 @@ npm install
 ### 3. Create the Supabase project and database
 
 1. Create a new project at [supabase.com](https://supabase.com/dashboard).
-2. Open **SQL Editor** and run the three files in `supabase/migrations/` **in order** (tables → rls → functions).
+2. Open **SQL Editor** and run every file in `supabase/migrations/` **in order** (tables → rls → functions → tests_and_marks).
    *(Or with the Supabase CLI: `npx supabase link` then `npx supabase db push`.)*
 3. For local testing you can turn off **Authentication → Sign In / Providers → Email → Confirm email**, so new sign-ups are logged in immediately. Turn it back on for production.
 
@@ -177,6 +181,7 @@ src/
 │  │  ├─ attendance/     batch + date picker, tap-to-toggle sheet
 │  │  ├─ students/       list, add/edit, profile with calendar & fee history
 │  │  ├─ fees/           tabs, payment sheet, "remind all overdue" stepper
+│  │  ├─ tests/          tests list, marks entry sheet, share results
 │  │  ├─ batches/        list, add/edit, archive
 │  │  ├─ reminders/      reminder log + logReminder action
 │  │  ├─ more/, settings/

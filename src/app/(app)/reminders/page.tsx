@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarX, IndianRupee, MessageCircle, MessageSquareText } from "lucide-react";
+import { CalendarX, IndianRupee, MessageCircle, MessageSquareText, NotebookPen } from "lucide-react";
 import { getCentre } from "@/lib/auth";
 import { formatDate, todayIST } from "@/lib/format";
 import { addDays } from "@/lib/calendar";
@@ -14,6 +14,7 @@ const TYPE_INFO: Record<ReminderType, { label: string; icon: typeof IndianRupee;
   fee: { label: "Fee", icon: IndianRupee, className: "bg-warning-soft text-warning" },
   absence: { label: "Absence", icon: CalendarX, className: "bg-danger-soft text-danger" },
   custom: { label: "Message", icon: MessageSquareText, className: "bg-accent text-accent-foreground" },
+  result: { label: "Result", icon: NotebookPen, className: "bg-success-soft text-success" },
 };
 
 /** "yyyy-MM-dd" of a timestamp, in India time */
@@ -54,7 +55,7 @@ export default async function RemindersPage() {
       <PageHeader
         title="Reminder log"
         backHref="/more"
-        description="Every WhatsApp reminder you opened, newest first."
+        description="Every WhatsApp message you opened, newest first."
       />
 
       {!logs?.length ? (

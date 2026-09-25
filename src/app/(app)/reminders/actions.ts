@@ -7,7 +7,7 @@ import type { ActionState } from "@/lib/action-state";
 
 const logSchema = z.object({
   studentId: z.uuid(),
-  type: z.enum(["fee", "absence", "custom"]),
+  type: z.enum(["fee", "absence", "custom", "result"]),
   message: z.string().trim().min(1).max(2000),
   feeRecordId: z.uuid().nullish(),
 });

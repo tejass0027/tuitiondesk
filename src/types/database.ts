@@ -306,6 +306,92 @@ export type Database = {
           },
         ];
       };
+      tests: {
+        Row: {
+          id: string;
+          centre_id: string;
+          batch_id: string;
+          name: string;
+          subject: string;
+          test_date: string;
+          max_marks: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          centre_id?: string;
+          batch_id: string;
+          name: string;
+          subject?: string;
+          test_date?: string;
+          max_marks: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          centre_id?: string;
+          batch_id?: string;
+          name?: string;
+          subject?: string;
+          test_date?: string;
+          max_marks?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tests_batch_id_centre_id_fkey";
+            columns: ["batch_id", "centre_id"];
+            isOneToOne: false;
+            referencedRelation: "batches";
+            referencedColumns: ["id", "centre_id"];
+          },
+        ];
+      };
+      test_marks: {
+        Row: {
+          id: string;
+          centre_id: string;
+          test_id: string;
+          student_id: string;
+          marks: number | null;
+          absent: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          centre_id?: string;
+          test_id: string;
+          student_id: string;
+          marks?: number | null;
+          absent?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          centre_id?: string;
+          test_id?: string;
+          student_id?: string;
+          marks?: number | null;
+          absent?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "test_marks_test_id_centre_id_fkey";
+            columns: ["test_id", "centre_id"];
+            isOneToOne: false;
+            referencedRelation: "tests";
+            referencedColumns: ["id", "centre_id"];
+          },
+          {
+            foreignKeyName: "test_marks_student_id_centre_id_fkey";
+            columns: ["student_id", "centre_id"];
+            isOneToOne: false;
+            referencedRelation: "students";
+            referencedColumns: ["id", "centre_id"];
+          },
+        ];
+      };
     };
     Views: {
       fee_overview: {
@@ -362,7 +448,7 @@ export type Database = {
     Enums: {
       attendance_status: "present" | "absent";
       payment_mode: "cash" | "upi" | "bank_transfer";
-      reminder_type: "fee" | "absence" | "custom";
+      reminder_type: "fee" | "absence" | "custom" | "result";
     };
     CompositeTypes: Record<string, never>;
   };
@@ -384,6 +470,8 @@ export type Attendance = Tables<"attendance">;
 export type FeeRecord = Tables<"fee_records">;
 export type Payment = Tables<"payments">;
 export type ReminderLog = Tables<"reminder_logs">;
+export type Test = Tables<"tests">;
+export type TestMark = Tables<"test_marks">;
 export type FeeOverview = Views<"fee_overview">;
 export type PaymentMode = Enums<"payment_mode">;
 export type ReminderType = Enums<"reminder_type">;

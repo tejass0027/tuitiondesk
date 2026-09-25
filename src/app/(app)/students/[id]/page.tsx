@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarCheck, IndianRupee, Pencil, Phone, ReceiptIndianRupee } from "lucide-react";
+import { CalendarCheck, IndianRupee, NotebookPen, Pencil, Phone, ReceiptIndianRupee } from "lucide-react";
 import { getCentre } from "@/lib/auth";
 import { formatDate, formatINR, formatMonth, todayIST } from "@/lib/format";
 import { isISOMonth, monthEnd } from "@/lib/calendar";
@@ -18,6 +18,13 @@ import { PaymentSheet } from "@/app/(app)/fees/payment-sheet";
 import { RemovePaymentButton } from "./remove-payment-button";
 import { ReminderSheet } from "@/components/reminders/reminder-sheet";
 import { customMessageStart } from "@/lib/whatsapp";
+import { formatMarks, percentOf, scoreBand } from "@/lib/marks";
+
+const BAND_STYLE = {
+  good: "bg-success-soft text-success",
+  average: "bg-warning-soft text-warning",
+  low: "bg-danger-soft text-danger",
+};
 
 export const metadata: Metadata = { title: "Student" };
 
@@ -29,7 +36,7 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
   const { supabase, centre } = await getCentre();
   await supabase.rpc("generate_monthly_fees"); // make sure this month's fee exists
 
-  const [{ data: student }, { data: stats }, { data: fees }, { data: monthMarks }] = await Promise.all([
+  const [{ data: student }, { data: stats }, { data: fees }, { data: monthMarks }, { data: testMarks }] = await Promise.all([
     supabase.from("students").select("*, batches(name)").eq("id", id).maybeSingle(),
     supabase.from("student_attendance_stats").select("*").eq("student_id", id).maybeSingle(),
     supabase.from("fee_overview").select("*").eq("student_id", id).order("month", { ascending: false }),
@@ -39,7 +46,22 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
       .eq("student_id", id)
       .gte("date", `${month}-01`)
       .lte("date", monthEnd(month)),
+    supabase
+      .from("test_marks")
+      .select("marks, absent, tests(id, name, subject, test_date, max_marks)")
+      .eq("student_id", id),
   ]);
+
+  // Newest test first; average % over the tests the student actually wrote
+  const results = (testMarks ?? [])
+    .filter((r) => r.tests)
+    .sort((a, b) => (b.tests!.test_date > a.tests!.test_date ? 1 : -1));
+  const written = results.filter((r) => !r.absent && r.marks !== null);
+  const averagePct = written.length
+    ? Math.round(
+        written.reduce((sum, r) => sum + percentOf(Number(r.marks), Number(r.tests!.max_marks)), 0) / written.length,
+      )
+    : null;
 
   if (!student) notFound();
 
@@ -148,6 +170,63 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
           marks={Object.fromEntries((monthMarks ?? []).map((m) => [m.date, m.status]))}
           hrefForMonth={(m) => `/students/${id}?month=${m}`}
         />
+      </section>
+
+      {/* Test marks */}
+      <section className="mt-8">
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <h2 className="text-xl font-bold">Marks</h2>
+          {averagePct !== null && (
+            <p className="text-sm text-muted-foreground">
+              Average <strong className="text-foreground">{averagePct}%</strong> in {written.length}{" "}
+              {written.length === 1 ? "test" : "tests"}
+            </p>
+          )}
+        </div>
+        {results.length === 0 ? (
+          <div className="flex items-center gap-3 rounded-2xl border-2 border-dashed p-5 text-muted-foreground">
+            <NotebookPen className="size-6 shrink-0" aria-hidden />
+            <p className="text-base">
+              No marks yet.{" "}
+              <Link href="/tests" className="font-semibold text-primary hover:underline">
+                Enter test marks
+              </Link>
+            </p>
+          </div>
+        ) : (
+          <ul className="grid grid-cols-1 gap-2">
+            {results.map((r) => {
+              const t = r.tests!;
+              const pct = r.absent || r.marks === null ? null : percentOf(Number(r.marks), Number(t.max_marks));
+              return (
+                <li key={t.id}>
+                  <Link
+                    href={`/tests/${t.id}`}
+                    className="flex items-center gap-3 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-foreground/8 transition-colors hover:bg-muted/60"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-base font-semibold">
+                        {t.name}
+                        {t.subject && <span className="font-normal text-muted-foreground"> · {t.subject}</span>}
+                      </span>
+                      <span className="block text-sm text-muted-foreground">{formatDate(t.test_date)}</span>
+                    </span>
+                    <span className="text-right">
+                      <span className="block text-base font-bold">
+                        {pct === null ? "Absent" : `${formatMarks(r.marks)}/${formatMarks(t.max_marks)}`}
+                      </span>
+                      {pct !== null && (
+                        <span className={cn("mt-0.5 inline-block rounded-full px-2 text-sm font-bold", BAND_STYLE[scoreBand(pct)])}>
+                          {pct}%
+                        </span>
+                      )}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
 
       {/* Fee history */}

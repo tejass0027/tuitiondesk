@@ -11,6 +11,7 @@ import { logout } from "@/app/(auth)/actions";
 export const metadata: Metadata = { title: "More" };
 
 const DESCRIPTIONS: Record<string, string> = {
+  "/tests": "Enter test marks and share results",
   "/batches": "Classes, timings and monthly fees",
   "/reminders": "Who was reminded and when",
   "/settings": "Centre name, phone, fee due date",
