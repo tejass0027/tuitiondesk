@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { Download, Eye, Loader2, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/components/shared/form-field";
 import { PERIODS } from "@/lib/report";
 import { cn } from "@/lib/utils";
@@ -24,7 +23,7 @@ type Props = {
 const CHOICES = [...PERIODS, { value: "custom", label: "Pick dates" }] as const;
 
 /**
- * Choose the period and remarks, then view / download / share the PDF.
+ * Choose the period, then view / download / share the PDF.
  * Changing the period reloads the page so the summary above stays in sync.
  */
 export function ReportOptions({ studentId, studentName, parentName, centreName, period, today }: Props) {
@@ -33,7 +32,6 @@ export function ReportOptions({ studentId, studentName, parentName, centreName, 
   const [navigating, startNavigation] = useTransition();
   const [from, setFrom] = useState(period.from);
   const [to, setTo] = useState(period.to);
-  const [remarks, setRemarks] = useState("");
   const [sharing, setSharing] = useState(false);
 
   function choose(preset: string, customFrom = from, customTo = to) {
@@ -51,7 +49,6 @@ export function ReportOptions({ studentId, studentName, parentName, centreName, 
       params.set("from", period.from);
       params.set("to", period.to);
     }
-    if (remarks.trim()) params.set("remarks", remarks.trim());
     if (download) params.set("download", "1");
     return `/students/${studentId}/report/pdf?${params}`;
   }
@@ -148,21 +145,6 @@ export function ReportOptions({ studentId, studentName, parentName, centreName, 
           </FormField>
         </div>
       )}
-
-      <FormField
-        label="Teacher’s remarks"
-        htmlFor="remarks"
-        hint={`Optional. Printed on the report card. ${600 - remarks.length} characters left.`}
-      >
-        <Textarea
-          id="remarks"
-          rows={4}
-          maxLength={600}
-          value={remarks}
-          onChange={(e) => setRemarks(e.target.value)}
-          placeholder="e.g. Regular with homework. Needs more practice in Trigonometry."
-        />
-      </FormField>
 
       <div className="grid gap-3">
         <Button size="lg" onClick={share} disabled={sharing || navigating} className="bg-[#1f9d55] text-white hover:bg-[#1a8a4a]">

@@ -7,7 +7,7 @@ Most small coaching centres in India still run on notebooks: one for attendance,
 - **Mark a whole batch in seconds.** Everyone starts as Present; tap only the absent ones and press Save.
 - **Know who has paid.** Monthly fees are created automatically. Record cash, UPI or bank payments, including part payments.
 - **Record test marks.** Type a whole class's marks on one screen and share each result with parents.
-- **Report cards as PDF.** One tap builds a printable progress report (attendance + marks + remarks) to share on WhatsApp.
+- **Report cards as PDF.** One tap builds a printable progress report (attendance + marks) to share on WhatsApp.
 - **Remind parents on WhatsApp for free.** Pre-filled messages open in WhatsApp with one tap. No paid API needed.
 - **See everything at a glance.** Today's batches, collections vs pending, overdue fees and low attendance on one home screen.
 
@@ -37,7 +37,7 @@ Parents don't need an account. They simply receive WhatsApp messages from the ow
 | **Attendance** | Pick a date and batch → everyone is Present → tap to mark Absent → one Save. Today's batches are shown first. Saving again updates the same day. |
 | **Fees** | A "due" entry is created every month for every active student. Due / Overdue / Paid tabs, collected vs pending totals, part payments, Undo, and a fee due day you can set. |
 | **Tests & marks** | Create a test for a batch (name, subject, date, out of). Type every student's marks on one screen (Next jumps to the next student), mark absentees, see the class average live, then share each result with parents on WhatsApp. Marks history and average % on the student profile. |
-| **Report card PDF** | From a student's profile: pick this month, last 3 months, the academic year (Apr–Mar) or any dates, add teacher's remarks, then Share (attaches the PDF to WhatsApp on phones), Download or View. Includes attendance by month, every test with % and a performance word, subject-wise averages and signature lines. |
+| **Report card PDF** | From a student's profile: pick this month, last 3 months, the academic year (Apr–Mar) or any dates, then Share (attaches the PDF to WhatsApp on phones), Download or View. Includes attendance by month, every test with % and a performance word, subject-wise averages and signature lines. |
 | **Reminders** | Fee, absence and custom WhatsApp messages from editable templates. "Remind all overdue" goes through parents one by one. Every reminder is logged. |
 | **Dashboard** | Today's batches (marked or not), this month's collections with a 6-month chart, overdue students with quick Remind, and students below 75% attendance. |
 | **Design** | Mobile-first with a bottom tab bar, big tap targets and 17px base text. Light & dark mode, ₹ with Indian digit grouping (₹1,00,000), dates as `25 Sep 2026`, loading skeletons, toasts after every save, friendly empty states. Status is always colour **and** icon **and** label. |

@@ -49,8 +49,7 @@ const s = StyleSheet.create({
   right: { textAlign: "right" },
   empty: { padding: 10, fontSize: 9.5, color: C.muted, borderWidth: 1, borderColor: C.line, borderRadius: 4 },
 
-  remarks: { minHeight: 64, padding: 10, borderWidth: 1, borderColor: C.line, borderRadius: 4, fontSize: 10, lineHeight: 1.45 },
-  signRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 36 },
+  signRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 56 },
   sign: { width: 170, borderTopWidth: 1, borderTopColor: C.ink, paddingTop: 4, fontSize: 9, color: C.muted, textAlign: "center" },
 
   footer: { position: "absolute", bottom: 20, left: 36, right: 36, flexDirection: "row", justifyContent: "space-between", fontSize: 8, color: C.muted },
@@ -69,11 +68,10 @@ export type ReportCardProps = {
   periodLabel: string;
   attendance: ReturnType<typeof summarizeAttendance>;
   marks: ReturnType<typeof summarizeMarks>;
-  remarks: string;
   generatedOn: string; // "yyyy-MM-dd"
 };
 
-export function ReportCard({ centre, student, periodLabel, attendance, marks, remarks, generatedOn }: ReportCardProps) {
+export function ReportCard({ centre, student, periodLabel, attendance, marks, generatedOn }: ReportCardProps) {
   return (
     <Document title={`Report card – ${student.name}`} author={centre.name} creator="TuitionDesk">
       <Page size="A4" style={s.page}>
@@ -206,14 +204,10 @@ export function ReportCard({ centre, student, periodLabel, attendance, marks, re
           </>
         )}
 
-        {/* Remarks + signatures */}
-        <View wrap={false}>
-          <Text style={s.sectionTitle}>Teacher&apos;s remarks</Text>
-          <Text style={s.remarks}>{remarks.trim() || " "}</Text>
-          <View style={s.signRow}>
-            <Text style={s.sign}>Teacher&apos;s signature</Text>
-            <Text style={s.sign}>Parent&apos;s signature</Text>
-          </View>
+        {/* Signatures */}
+        <View style={s.signRow} wrap={false}>
+          <Text style={s.sign}>Teacher&apos;s signature</Text>
+          <Text style={s.sign}>Parent&apos;s signature</Text>
         </View>
 
         <View style={s.footer} fixed>

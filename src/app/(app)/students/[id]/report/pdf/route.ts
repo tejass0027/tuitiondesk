@@ -6,7 +6,7 @@ import { ReportCard } from "@/lib/pdf/report-card";
 import { loadReportData, resolvePeriod } from "@/lib/report-data";
 
 /**
- * GET /students/<id>/report/pdf?period=this-month&remarks=...
+ * GET /students/<id>/report/pdf?period=this-month
  * Builds the report card on the server and sends it back as a PDF file.
  */
 export async function GET(request: Request, { params }: RouteContext<"/students/[id]/report/pdf">) {
@@ -28,7 +28,6 @@ export async function GET(request: Request, { params }: RouteContext<"/students/
       periodLabel: period.label,
       attendance: data.attendance,
       marks: data.marks,
-      remarks: (query.remarks ?? "").slice(0, 600),
       generatedOn: today,
     }) as ReactElement<DocumentProps>,
   );
