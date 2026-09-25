@@ -8,8 +8,9 @@ export default function SignupPage() {
   return (
     <div className="grid gap-8">
       <div className="grid gap-2">
-        <h1 className="text-3xl font-bold">Set up your centre</h1>
-        <p className="text-lg text-muted-foreground">Takes less than a minute. Free to use.</p>
+        <p className="text-sm font-semibold tracking-wider text-primary uppercase">Get started free</p>
+        <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight">Set up your centre</h1>
+        <p className="text-lg text-muted-foreground">Takes less than a minute. No card needed.</p>
       </div>
 
       <SignupForm />

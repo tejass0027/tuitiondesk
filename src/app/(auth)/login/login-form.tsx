@@ -1,10 +1,11 @@
 "use client";
 
 import { useActionState } from "react";
-import { CircleAlert } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { ArrowRight, CircleAlert, Mail } from "lucide-react";
 import { FormField } from "@/components/shared/form-field";
 import { SubmitButton } from "@/components/shared/submit-button";
+import { IconInput } from "@/components/auth/icon-input";
+import { PasswordInput } from "@/components/auth/password-input";
 import { login } from "../actions";
 
 export function LoginForm({ initialError }: { initialError?: string }) {
@@ -24,7 +25,8 @@ export function LoginForm({ initialError }: { initialError?: string }) {
       )}
 
       <FormField label="Email" htmlFor="email" error={state?.fieldErrors?.email}>
-        <Input
+        <IconInput
+          icon={Mail}
           id="email"
           name="email"
           type="email"
@@ -33,23 +35,29 @@ export function LoginForm({ initialError }: { initialError?: string }) {
           placeholder="you@example.com"
           defaultValue={state?.values?.email}
           aria-invalid={Boolean(state?.fieldErrors?.email)}
+          className="h-14"
           required
         />
       </FormField>
 
       <FormField label="Password" htmlFor="password" error={state?.fieldErrors?.password}>
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           autoComplete="current-password"
+          placeholder="Your password"
           aria-invalid={Boolean(state?.fieldErrors?.password)}
+          className="h-14"
           required
         />
       </FormField>
 
-      <SubmitButton pending={pending} pendingText="Logging in…" className="mt-2">
-        Log in
+      <SubmitButton
+        pending={pending}
+        pendingText="Logging in…"
+        className="mt-1 h-14 bg-linear-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-600/30 hover:from-indigo-500 hover:to-violet-500"
+      >
+        Log in <ArrowRight aria-hidden />
       </SubmitButton>
     </form>
   );

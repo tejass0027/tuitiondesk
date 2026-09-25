@@ -162,3 +162,13 @@
     @apply font-heading tracking-tight;
   }
 }
+/* Gentle up-and-down drift for the login page preview cards */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
