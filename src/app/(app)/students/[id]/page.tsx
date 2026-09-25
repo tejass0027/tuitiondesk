@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarCheck, IndianRupee, NotebookPen, Pencil, Phone, ReceiptIndianRupee } from "lucide-react";
+import { CalendarCheck, FileText, IndianRupee, NotebookPen, Pencil, Phone, ReceiptIndianRupee } from "lucide-react";
 import { getCentre } from "@/lib/auth";
 import { formatDate, formatINR, formatMonth, todayIST } from "@/lib/format";
 import { isISOMonth, monthEnd } from "@/lib/calendar";
@@ -160,6 +160,12 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
           tone={hasOverdue ? "danger" : pending > 0 ? "warning" : "success"}
         />
       </section>
+
+      <Button asChild variant="outline" size="lg" className="mt-4 w-full">
+        <Link href={`/students/${student.id}/report`}>
+          <FileText aria-hidden /> Report card (PDF)
+        </Link>
+      </Button>
 
       {/* Attendance calendar */}
       <section className="mt-8">
