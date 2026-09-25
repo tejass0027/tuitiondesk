@@ -16,11 +16,15 @@ export type ActionState = {
   id?: string;
 } | null;
 
-/** FormData -> plain object of strings (for re-filling the form). */
+/**
+ * FormData -> plain object of strings (for re-filling the form).
+ * Repeated keys (e.g. several ticked checkboxes) are joined with commas.
+ */
 export function formValues(formData: FormData): Record<string, string> {
   const values: Record<string, string> = {};
   formData.forEach((value, key) => {
-    if (typeof value === "string" && !key.startsWith("$ACTION")) values[key] = value;
+    if (typeof value !== "string" || key.startsWith("$ACTION")) return;
+    values[key] = key in values ? `${values[key]},${value}` : value;
   });
   return values;
 }
