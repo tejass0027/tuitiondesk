@@ -150,7 +150,7 @@ export default async function FeesPage({ searchParams }: PageProps<"/fees">) {
 
       {classes && classes.length > 0 && (
         <div className="mt-3">
-          <ClassFilter classes={classes.map((c) => c.name)} selected={classFilter} hrefFor={(cls) => hrefFor(month, tab, cls)} />
+          <ClassFilter classes={classes.map((c) => c.name)} selected={classFilter} baseHref={hrefFor(month, tab, "")} />
         </div>
       )}
 

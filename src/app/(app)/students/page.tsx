@@ -85,7 +85,7 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
             <ClassFilter
               classes={classes.map((c) => c.name)}
               selected={classFilter}
-              hrefFor={(cls) => hrefWith(q, batchFilter, cls)}
+              baseHref={hrefWith(q, batchFilter)}
             />
           )}
 
@@ -109,7 +109,11 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
             <EmptyState
               icon={SearchX}
               title="No matching students"
-              description={q ? `Nobody found for “${q}”. Check the spelling or try another batch.` : "No students in this batch yet."}
+              description={q
+                  ? `Nobody found for “${q}”. Check the spelling or try another batch.`
+                  : classFilter && !batchFilter
+                    ? `No students in ${classFilter} yet.`
+                    : "No students match these filters yet."}
               action={
                 <Button asChild variant="outline" size="lg">
                   <Link href={addHref}>

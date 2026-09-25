@@ -5,18 +5,21 @@ import { useRouter } from "next/navigation";
 import { GraduationCap } from "lucide-react";
 import { NativeSelect } from "@/components/shared/native-select";
 
-/** "All classes / Class 1 / Class 2 …" dropdown that updates ?class= in the URL. */
-export function ClassFilter({
-  classes,
-  selected,
-  hrefFor,
-}: {
-  classes: string[];
-  selected: string;
-  hrefFor: (cls: string) => string;
-}) {
+/**
+ * "All classes / Class 1 / Class 2 …" dropdown that updates ?class= in the URL.
+ * baseHref is the current page URL without the class filter, e.g. "/fees?month=2026-09&tab=due".
+ */
+export function ClassFilter({ classes, selected, baseHref }: { classes: string[]; selected: string; baseHref: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const hrefFor = (cls: string) => {
+    const [path, query = ""] = baseHref.split("?");
+    const params = new URLSearchParams(query);
+    if (cls) params.set("class", cls);
+    else params.delete("class");
+    const qs = params.toString();
+    return qs ? `${path}?${qs}` : path;
+  };
   const match = classes.find((c) => c.toLowerCase() === selected.toLowerCase()) ?? "";
 
   return (
