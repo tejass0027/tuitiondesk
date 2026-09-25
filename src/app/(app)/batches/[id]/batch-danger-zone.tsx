@@ -73,7 +73,7 @@ export function BatchDangerZone({ batchId, batchName, isActive, studentCount }: 
             <AlertDialogFooter>
               <AlertDialogCancel>Keep it</AlertDialogCancel>
               <AlertDialogAction
-                className="bg-danger text-background hover:bg-danger/90"
+                variant="danger"
                 onClick={() => run(() => deleteBatch(batchId), true)}
               >
                 Delete

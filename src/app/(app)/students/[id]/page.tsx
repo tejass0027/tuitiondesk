@@ -13,6 +13,9 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { paymentModeLabel } from "@/lib/fees";
+import { PaymentSheet } from "@/app/(app)/fees/payment-sheet";
+import { RemovePaymentButton } from "./remove-payment-button";
 
 export const metadata: Metadata = { title: "Student" };
 
@@ -22,6 +25,7 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
   const today = todayIST();
   const month = isISOMonth(monthParam) && monthParam <= today.slice(0, 7) ? monthParam : today.slice(0, 7);
   const { supabase } = await getCentre();
+  await supabase.rpc("generate_monthly_fees"); // make sure this month's fee exists
 
   const [{ data: student }, { data: stats }, { data: fees }, { data: monthMarks }] = await Promise.all([
     supabase.from("students").select("*, batches(name)").eq("id", id).maybeSingle(),
@@ -36,6 +40,14 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
   ]);
 
   if (!student) notFound();
+
+  const { data: payments } = fees?.length
+    ? await supabase
+        .from("payments")
+        .select("id, fee_record_id, amount, paid_on, mode, note")
+        .in("fee_record_id", fees.map((f) => f.id))
+        .order("paid_on")
+    : { data: [] };
 
   const attendancePct =
     stats && stats.total_days > 0 ? Math.round((stats.present_days / stats.total_days) * 100) : null;
@@ -132,33 +144,55 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
         {!fees?.length ? (
           <div className="flex items-center gap-3 rounded-2xl border-2 border-dashed p-5 text-muted-foreground">
             <ReceiptIndianRupee className="size-6 shrink-0" aria-hidden />
-            <p className="text-base">Monthly fees will appear here once the Fees page opens for this month.</p>
+            <p className="text-base">No fees yet. Fees are added automatically each month while the student is active.</p>
           </div>
         ) : (
           <ul className="grid grid-cols-1 gap-2.5">
             {fees.map((f) => {
               const partial = f.status !== "paid" && Number(f.amount_paid) > 0;
+              const feePayments = (payments ?? []).filter((p) => p.fee_record_id === f.id);
               return (
-                <li
-                  key={f.id}
-                  className="flex items-center gap-3 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-foreground/8"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-base font-semibold">{formatMonth(f.month)}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {f.status === "paid"
-                        ? `Paid ${formatINR(f.amount_paid)}${f.last_paid_on ? ` on ${formatDate(f.last_paid_on)}` : ""}`
-                        : partial
-                          ? `Paid ${formatINR(f.amount_paid)} of ${formatINR(f.amount_due)}`
-                          : `Due by ${formatDate(f.due_date)}`}
-                    </p>
+                <li key={f.id} className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-foreground/8">
+                  <div className="flex items-center gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-base font-semibold">{formatMonth(f.month)}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {f.status === "paid"
+                          ? `Paid ${formatINR(f.amount_paid)}`
+                          : partial
+                            ? `Paid ${formatINR(f.amount_paid)} of ${formatINR(f.amount_due)}`
+                            : `Due by ${formatDate(f.due_date)}`}
+                      </p>
+                    </div>
+                    <div className="grid justify-items-end gap-1">
+                      <p className="text-base font-bold">
+                        {formatINR(f.status === "paid" ? f.amount_due : f.balance)}
+                      </p>
+                      <StatusBadge status={f.status} label={partial && f.status === "due" ? "Part paid" : undefined} />
+                    </div>
                   </div>
-                  <div className="grid justify-items-end gap-1">
-                    <p className="text-base font-bold">
-                      {formatINR(f.status === "paid" ? f.amount_due : f.balance)}
-                    </p>
-                    <StatusBadge status={f.status} label={partial && f.status === "due" ? "Part paid" : undefined} />
-                  </div>
+
+                  {feePayments.length > 0 && (
+                    <ul className="mt-3 grid gap-1 border-t pt-2">
+                      {feePayments.map((p) => (
+                        <li key={p.id} className="flex items-center gap-2 text-sm">
+                          <span className="flex-1 text-muted-foreground">
+                            {formatDate(p.paid_on)} · {paymentModeLabel(p.mode)}
+                            {p.note && ` · ${p.note}`}
+                          </span>
+                          <span className="font-semibold">{formatINR(p.amount)}</span>
+                          <RemovePaymentButton
+                            paymentId={p.id}
+                            description={`${formatINR(p.amount)} by ${paymentModeLabel(p.mode)} on ${formatDate(p.paid_on)}`}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {f.status !== "paid" && (
+                    <PaymentSheet fee={f} triggerClassName="mt-3 w-full" />
+                  )}
                 </li>
               );
             })}
