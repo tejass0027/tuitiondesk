@@ -23,7 +23,7 @@ export default async function MorePage() {
     <>
       <PageHeader title="More" description={centre.name} />
 
-      <nav aria-label="More pages" className="grid gap-3">
+      <nav aria-label="More pages" className="grid grid-cols-1 gap-3">
         {SECONDARY_NAV.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
