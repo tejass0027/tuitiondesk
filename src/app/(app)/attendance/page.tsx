@@ -20,7 +20,7 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
   const today = todayIST();
   const date = isISODate(params.date) && params.date <= today ? params.date : today;
 
-  const { supabase } = await getCentre();
+  const { supabase, centre } = await getCentre();
   const { data: batches } = await supabase
     .from("batches")
     .select("id, name, days, start_time, end_time")
@@ -58,7 +58,7 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
   const [{ data: students }, { data: marks }, { count: batchSize }] = await Promise.all([
     supabase
       .from("students")
-      .select("id, name, class")
+      .select("id, name, class, parent_name, parent_whatsapp")
       .eq("batch_id", batch.id)
       .eq("is_active", true)
       .lte("joining_date", date)
@@ -154,6 +154,9 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
             // a fresh sheet for every batch/date, so no ticks leak between them
             key={`${batch.id}-${date}`}
             batchId={batch.id}
+            batchName={batch.name}
+            centreName={centre.name}
+            today={today}
             date={date}
             students={students}
             saved={saved}

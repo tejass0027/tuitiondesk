@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarCheck, IndianRupee, MessageCircle, Pencil, Phone, ReceiptIndianRupee } from "lucide-react";
+import { CalendarCheck, IndianRupee, Pencil, Phone, ReceiptIndianRupee } from "lucide-react";
 import { getCentre } from "@/lib/auth";
 import { formatDate, formatINR, formatMonth, todayIST } from "@/lib/format";
 import { isISOMonth, monthEnd } from "@/lib/calendar";
@@ -16,6 +16,8 @@ import { cn } from "@/lib/utils";
 import { paymentModeLabel } from "@/lib/fees";
 import { PaymentSheet } from "@/app/(app)/fees/payment-sheet";
 import { RemovePaymentButton } from "./remove-payment-button";
+import { ReminderSheet } from "@/components/reminders/reminder-sheet";
+import { customMessageStart } from "@/lib/whatsapp";
 
 export const metadata: Metadata = { title: "Student" };
 
@@ -24,7 +26,7 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
   const { month: monthParam } = await searchParams;
   const today = todayIST();
   const month = isISOMonth(monthParam) && monthParam <= today.slice(0, 7) ? monthParam : today.slice(0, 7);
-  const { supabase } = await getCentre();
+  const { supabase, centre } = await getCentre();
   await supabase.rpc("generate_monthly_fees"); // make sure this month's fee exists
 
   const [{ data: student }, { data: stats }, { data: fees }, { data: monthMarks }] = await Promise.all([
@@ -97,11 +99,21 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
               <Phone aria-hidden /> Call
             </a>
           </Button>
-          <Button asChild className="bg-[#1f9d55] text-white hover:bg-[#1a8a4a]">
-            <a href={`https://wa.me/${student.parent_whatsapp}`} target="_blank" rel="noopener noreferrer">
-              <MessageCircle aria-hidden /> WhatsApp
-            </a>
-          </Button>
+          <ReminderSheet
+            title="Message parent"
+            type="custom"
+            triggerLabel="WhatsApp"
+            triggerVariant="default"
+            triggerSize="default"
+            triggerClassName="bg-[#1f9d55] text-white hover:bg-[#1a8a4a]"
+            recipient={{
+              studentId: student.id,
+              studentName: student.name,
+              parentName: student.parent_name,
+              phone: student.parent_whatsapp,
+            }}
+            initialMessage={customMessageStart({ parentName: student.parent_name, centreName: centre.name })}
+          />
         </div>
       </section>
 

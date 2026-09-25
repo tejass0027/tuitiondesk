@@ -1,6 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, CircleCheck, PartyPopper, ReceiptIndianRupee, Users } from "lucide-react";
+import {
+  BellRing,
+  ChevronLeft,
+  ChevronRight,
+  CircleCheck,
+  MessageCircleMore,
+  PartyPopper,
+  ReceiptIndianRupee,
+  Users,
+} from "lucide-react";
 import { getCentre } from "@/lib/auth";
 import { addMonths, isISOMonth } from "@/lib/calendar";
 import { formatDate, formatINR, formatMonth, todayIST } from "@/lib/format";
@@ -12,6 +21,8 @@ import { InitialsAvatar } from "@/components/shared/initials-avatar";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import type { FeeOverview } from "@/types/database";
+import { ReminderSheet } from "@/components/reminders/reminder-sheet";
+import { feeReminderMessage } from "@/lib/whatsapp";
 import { PaymentSheet } from "./payment-sheet";
 
 export const metadata: Metadata = { title: "Fees" };
@@ -30,7 +41,7 @@ export default async function FeesPage({ searchParams }: PageProps<"/fees">) {
   const month = isISOMonth(params.month) && params.month <= currentMonth ? params.month : currentMonth;
   const monthStart = `${month}-01`;
 
-  const { supabase } = await getCentre();
+  const { supabase, centre } = await getCentre();
 
   // Make sure every active student has this month's fee entry (safe to repeat)
   await supabase.rpc("generate_monthly_fees");
@@ -68,6 +79,18 @@ export default async function FeesPage({ searchParams }: PageProps<"/fees">) {
       .in("fee_record_id", byTab.paid.map((r) => r.id))
       .order("paid_on");
     for (const p of payments ?? []) modeByFee.set(p.fee_record_id, paymentModeLabel(p.mode));
+  }
+
+  // When was each unpaid fee last reminded? (helps avoid reminding twice)
+  const lastReminded = new Map<string, string>();
+  const unpaidIds = list.filter((r) => r.status !== "paid").map((r) => r.id);
+  if (unpaidIds.length) {
+    const { data: logs } = await supabase
+      .from("reminder_logs")
+      .select("fee_record_id, sent_at")
+      .in("fee_record_id", unpaidIds)
+      .order("sent_at");
+    for (const l of logs ?? []) if (l.fee_record_id) lastReminded.set(l.fee_record_id, l.sent_at);
   }
 
   const summary = summarizeFees(rows);
@@ -183,7 +206,14 @@ export default async function FeesPage({ searchParams }: PageProps<"/fees">) {
       </nav>
 
       {/* List */}
-      <div className="mt-4">
+      <div className="mt-4 grid grid-cols-1 gap-3">
+        {tab === "overdue" && overdue.length > 0 && (
+          <Button asChild size="lg" className="w-full">
+            <Link href="/fees/remind">
+              <BellRing aria-hidden /> Remind all overdue ({new Set(overdue.map((o) => o.student_id)).size})
+            </Link>
+          </Button>
+        )}
         {list.length === 0 ? (
           <EmptyState
             icon={tab === "paid" ? ReceiptIndianRupee : PartyPopper}
@@ -201,6 +231,8 @@ export default async function FeesPage({ searchParams }: PageProps<"/fees">) {
                 key={fee.id}
                 fee={fee}
                 mode={modeByFee.get(fee.id)}
+                centreName={centre.name}
+                remindedAt={lastReminded.get(fee.id)}
                 showMonth={tab === "overdue" && fee.month !== monthStart}
               />
             ))}
@@ -211,7 +243,19 @@ export default async function FeesPage({ searchParams }: PageProps<"/fees">) {
   );
 }
 
-function FeeRow({ fee, mode, showMonth }: { fee: FeeOverview; mode?: string; showMonth: boolean }) {
+function FeeRow({
+  fee,
+  mode,
+  showMonth,
+  centreName,
+  remindedAt,
+}: {
+  fee: FeeOverview;
+  mode?: string;
+  showMonth: boolean;
+  centreName: string;
+  remindedAt?: string;
+}) {
   const partial = isPartlyPaid(fee);
   const paid = fee.status === "paid";
 
@@ -240,9 +284,34 @@ function FeeRow({ fee, mode, showMonth }: { fee: FeeOverview; mode?: string; sho
         </div>
       </div>
       {!paid && (
-        <div className="mt-3 flex justify-end">
-          <PaymentSheet fee={fee} triggerClassName="w-full sm:w-auto" />
-        </div>
+        <>
+          {remindedAt && (
+            <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+              <MessageCircleMore className="size-4" aria-hidden /> Reminded {formatDate(remindedAt)}
+            </p>
+          )}
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:justify-end">
+            <ReminderSheet
+              title="Fee reminder"
+              type="fee"
+              feeRecordId={fee.id}
+              recipient={{
+                studentId: fee.student_id,
+                studentName: fee.student_name,
+                parentName: fee.parent_name,
+                phone: fee.parent_whatsapp,
+              }}
+              initialMessage={feeReminderMessage({
+                parentName: fee.parent_name,
+                studentName: fee.student_name,
+                amount: Number(fee.balance),
+                months: [fee.month],
+                centreName,
+              })}
+            />
+            <PaymentSheet fee={fee} triggerLabel="Add payment" />
+          </div>
+        </>
       )}
     </li>
   );

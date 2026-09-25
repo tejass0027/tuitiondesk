@@ -37,14 +37,22 @@ const MODE_ICONS: Record<PaymentMode, typeof Banknote> = {
 };
 
 /** "Record payment" button that opens a bottom sheet with the payment form. */
-export function PaymentSheet({ fee, triggerClassName }: { fee: PayableFee; triggerClassName?: string }) {
+export function PaymentSheet({
+  fee,
+  triggerLabel = "Record payment",
+  triggerClassName,
+}: {
+  fee: PayableFee;
+  triggerLabel?: string;
+  triggerClassName?: string;
+}) {
   const [open, setOpen] = useState(false);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button size="sm" className={triggerClassName}>
-          <IndianRupee aria-hidden /> Record payment
+          <IndianRupee aria-hidden /> {triggerLabel}
         </Button>
       </SheetTrigger>
       <SheetContent side="bottom" className="mx-auto max-h-[92dvh] max-w-lg overflow-y-auto rounded-t-3xl px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">

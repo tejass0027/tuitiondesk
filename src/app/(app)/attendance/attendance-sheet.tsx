@@ -5,14 +5,25 @@ import { toast } from "sonner";
 import { Check, CircleCheck, Loader2, RotateCcw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InitialsAvatar } from "@/components/shared/initials-avatar";
+import { ReminderSheet } from "@/components/reminders/reminder-sheet";
+import { absenceMessage } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
 import type { AttendanceStatus } from "@/types/database";
 import { saveAttendance } from "./actions";
 
-type SheetStudent = { id: string; name: string; class: string };
+type SheetStudent = {
+  id: string;
+  name: string;
+  class: string;
+  parent_name: string;
+  parent_whatsapp: string;
+};
 
 type Props = {
   batchId: string;
+  batchName: string;
+  centreName: string;
+  today: string;
   date: string;
   students: SheetStudent[];
   /** statuses already saved for this batch + date (empty if not marked yet) */
@@ -23,7 +34,7 @@ type Props = {
  * Everyone starts as Present; tap a student to flip them to Absent.
  * Nothing is sent to the server until "Save".
  */
-export function AttendanceSheet({ batchId, date, students, saved }: Props) {
+export function AttendanceSheet({ batchId, batchName, centreName, today, date, students, saved }: Props) {
   const alreadyMarked = Object.keys(saved).length > 0;
   const initial = () =>
     Object.fromEntries(students.map((s) => [s.id, saved[s.id] ?? "present"])) as Record<string, AttendanceStatus>;
@@ -131,6 +142,42 @@ export function AttendanceSheet({ batchId, date, students, saved }: Props) {
           )}
         </div>
       </div>
+
+      {/* Once saved, offer to tell parents of absent students */}
+      {!isDirty && lastSaved && absentCount > 0 && (
+        <section className="mt-2 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-foreground/8">
+          <h2 className="text-lg font-bold">Tell parents about absences</h2>
+          <p className="text-sm text-muted-foreground">Sends a WhatsApp message to each absent student’s parent.</p>
+          <ul className="mt-3 grid grid-cols-1 gap-2">
+            {students
+              .filter((s) => lastSaved[s.id] === "absent")
+              .map((s) => (
+                <li key={s.id} className="flex items-center gap-3">
+                  <span className="min-w-0 flex-1 text-base font-semibold">{s.name}</span>
+                  <ReminderSheet
+                    title="Absence message"
+                    type="absence"
+                    triggerLabel="Send"
+                    recipient={{
+                      studentId: s.id,
+                      studentName: s.name,
+                      parentName: s.parent_name,
+                      phone: s.parent_whatsapp,
+                    }}
+                    initialMessage={absenceMessage({
+                      parentName: s.parent_name,
+                      studentName: s.name,
+                      date,
+                      today,
+                      batchName,
+                      centreName,
+                    })}
+                  />
+                </li>
+              ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
