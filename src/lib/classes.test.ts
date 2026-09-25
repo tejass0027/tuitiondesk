@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classLabel, cleanClassName, compareClassNames } from "./classes";
+import { classBadge, classLabel, cleanClassName, compareClassNames } from "./classes";
 
 describe("class helpers", () => {
   it("cleans typed names", () => {
@@ -16,5 +16,15 @@ describe("classLabel", () => {
     expect(classLabel("10th")).toBe("Class 10th");
     expect(classLabel("Class 10")).toBe("Class 10");
     expect(classLabel("PUC 1")).toBe("PUC 1");
+  });
+});
+
+describe("classBadge", () => {
+  it("makes short tile badges", () => {
+    expect(classBadge("Class 10")).toBe("10");
+    expect(classBadge("Class 10 (CBSE)")).toBe("10");
+    expect(classBadge("PUC 1")).toBe("PUC1");
+    expect(classBadge("JEE")).toBe("JEE");
+    expect(classBadge("Spoken English")).toBe("SE");
   });
 });
