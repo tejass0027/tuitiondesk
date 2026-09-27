@@ -30,13 +30,18 @@ Parents don't need an account. They simply receive WhatsApp messages from the ow
 
 | Area | What you can do |
 |---|---|
-| **Sign up & centre** | Sign up with email + password, centre name, phone and address. Each owner only ever sees their own centre (enforced by Postgres row-level security). |
+| **Sign up & centre** | Sign up with email + password, centre name, phone and address. "Forgot password?" emails a reset link; you can also change your password in Settings. Each owner only ever sees their own centre (enforced by Postgres row-level security). |
 | **Classes** | Set up your class list once, rename or remove classes, then pick a class when adding students and filter the student list and fees by class. |
 | **Batches** | Create batches like "Class 10 Maths – Evening" with days, timings and a monthly fee. Archive old batches without losing history. |
-| **Students** | Add students with class, batch, parent name and WhatsApp number. The fee is filled in from the batch and can be lowered for discounts. Search by student or parent name, filter by batch. |
+| **Students** | Add students with class, batch and both parents' names and phones (choose Father, Mother or Both to get messages). The fee is filled in from the batch and can be lowered for discounts. Search by student or parent name, filter by batch or class. |
+| **Import from Excel** | Add a whole register at once from an Excel (.xlsx) or CSV file, or by pasting cells. Common headings are recognised ("Student Name", "Mobile No.", "Std"…), every row is checked before saving, and students already added are skipped. A template is included. |
+| **Student photos** | Tap the avatar to take or choose a photo. It's cropped to a small square in the browser and stored in a **private** Supabase Storage bucket, shown with short-lived signed URLs. |
 | **Student profile** | Parent contact (call / WhatsApp), attendance %, a monthly attendance calendar, and full fee + payment history. |
 | **Attendance** | Pick a date and batch → everyone is Present → tap to mark Absent → one Save. Today's batches are shown first. Saving again updates the same day. |
 | **Fees** | A "due" entry is created every month for every active student. Due / Overdue / Paid tabs, collected vs pending totals, part payments, Undo, and a fee due day you can set. |
+| **Fee receipts** | Every payment has a PDF receipt (receipt number, amount in words, balance left). Share it to WhatsApp straight after recording the payment, or later from the student's fee history. |
+| **Holidays** | Add festivals or whole breaks. The attendance page says the centre is closed (with "Mark anyway" for extra classes), Home skips the day, and calendars show it. |
+| **Parent link** | A private, read-only page per student with attendance calendar, marks and fees. Parents open it from WhatsApp with no login; the owner can turn it off at any time. |
 | **Tests & marks** | Create a test for a batch (name, subject, date, out of). Type every student's marks on one screen (Next jumps to the next student), mark absentees, see the class average live, then share each result with parents on WhatsApp. Marks history and average % on the student profile. |
 | **Report card PDF** | From a student's profile: pick this month, last 3 months, the academic year (Apr–Mar) or any dates, then Share (attaches the PDF to WhatsApp on phones), Download or View. Includes attendance by month, every test with % and a performance word, subject-wise averages and signature lines. |
 | **Reminders** | Fee, absence and custom WhatsApp messages from editable templates. "Remind all overdue" goes through parents one by one. Every reminder is logged. |
@@ -82,6 +87,7 @@ Supabase Postgres
 - **Fee status is computed, not stored.** The `fee_overview` view adds up payments and compares the due date with today (in IST). A fee turns "overdue" by itself: no cron job, and no status column that can go stale.
 - **Monthly fees without a cron job.** `generate_monthly_fees()` is *idempotent*: a unique `(student_id, month)` key means calling it on every page load only ever creates the missing rows.
 - **Attendance is one request.** Toggling happens in the browser for instant feedback. Save sends the whole batch as a single **upsert** on the unique `(student_id, batch_id, date)` key, so re-saving a day updates it instead of duplicating it.
+- **Parent link without accounts.** Each student can get a random 32-character token. Anonymous visitors can't read any table; they can only call `parent_view(token)`, which returns just that one student's summary. Clearing the token turns the link off instantly.
 - **WhatsApp via `wa.me` links.** Free, no approval needed. The message is pre-filled and the owner just taps Send. Because the app can't see inside WhatsApp, the log records "reminder opened".
 
 ---
@@ -97,6 +103,8 @@ Migrations live in [`supabase/migrations`](supabase/migrations):
 | `…_functions.sql` | Signup trigger (creates the centre), `generate_monthly_fees()`, `today_ist()`, and the `fee_overview` and `student_attendance_stats` views |
 | `…_classes.sql` | The centre's class list, with RLS and a `rename_class()` function that renames a class on every student too |
 | `…_tests_and_marks.sql` | `tests` and `test_marks` with RLS, plus triggers that stop marks going above a test's maximum |
+| `…_both_parents.sql`, `…_message_both_parents.sql` | Father and mother details, and who gets WhatsApp messages (father / mother / both) |
+| `…_photos_holidays_parent_links.sql` | Private `student-photos` storage bucket with per-centre folder policies, the `holidays` table, and `parent_view(token)`: a security-definer function that returns one student's data for a valid parent link |
 
 ```
 centres ─┬─< batches ─┬─< students ─┬─< attendance
@@ -203,8 +211,6 @@ supabase/migrations/     SQL schema, RLS and functions
 
 ## Roadmap ideas
 
-- Printable / shareable fee receipts
-- Holidays so they don't count against attendance
 - Multiple staff logins per centre
 - Hindi and other regional languages
 - Installable PWA with offline attendance
