@@ -2,7 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/database";
 
-const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password", "/auth"];
+// "/p/<token>" is the read-only page parents open from WhatsApp
+const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password", "/auth", "/p"];
 
 /**
  * Runs before every page request (see src/proxy.ts):

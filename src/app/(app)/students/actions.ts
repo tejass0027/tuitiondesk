@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getCentre } from "@/lib/auth";
@@ -148,4 +149,25 @@ export async function removeStudentPhoto(studentId: string): Promise<ActionState
 
   refresh();
   return { ok: true, message: "Photo removed" };
+}
+
+/** Turns on the parent link: a long random token that is impossible to guess. */
+export async function createParentLink(studentId: string): Promise<ActionState> {
+  const token = randomBytes(24).toString("base64url"); // 32 characters
+  const { supabase } = await getCentre();
+  const { error } = await supabase.from("students").update({ share_token: token }).eq("id", studentId);
+  if (error) return { ok: false, message: "Could not create the link." };
+
+  revalidatePath(`/students/${studentId}`);
+  return { ok: true, message: "Parent link is ready" };
+}
+
+/** Old links stop working straight away. */
+export async function turnOffParentLink(studentId: string): Promise<ActionState> {
+  const { supabase } = await getCentre();
+  const { error } = await supabase.from("students").update({ share_token: null }).eq("id", studentId);
+  if (error) return { ok: false, message: "Could not turn off the link." };
+
+  revalidatePath(`/students/${studentId}`);
+  return { ok: true, message: "Link turned off. The old link no longer works." };
 }

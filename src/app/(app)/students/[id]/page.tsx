@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { CalendarCheck, FileText, IndianRupee, MessageCircle, NotebookPen, Pencil, Phone, ReceiptIndianRupee } from "lucide-react";
 import { getCentre } from "@/lib/auth";
@@ -20,7 +21,8 @@ import { PhotoPicker } from "./photo-picker";
 import { signPhotoUrls } from "@/lib/photos";
 import { ReceiptButton } from "@/components/fees/receipt-button";
 import { ReminderSheet } from "@/components/reminders/reminder-sheet";
-import { customMessageStart } from "@/lib/whatsapp";
+import { customMessageStart, parentLinkMessage } from "@/lib/whatsapp";
+import { ParentLinkCard } from "./parent-link-card";
 import { formatMarks, percentOf, scoreBand } from "@/lib/marks";
 
 const BAND_STYLE = {
@@ -77,6 +79,27 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
         .in("fee_record_id", fees.map((f) => f.id))
         .order("paid_on")
     : { data: [] };
+
+  // Full link for the parent page, e.g. https://yourdomain.in/p/<token>
+  const h = await headers();
+  const origin = `${h.get("x-forwarded-proto") ?? "http"}://${h.get("x-forwarded-host") ?? h.get("host")}`;
+  const parentUrl = student.share_token ? `${origin}/p/${student.share_token}` : null;
+  // Both parents can have the link (it only shows information, it isn't a reminder)
+  const linkRecipients = parentUrl
+    ? (
+        [
+          { label: "Father", name: student.father_name, phone: student.father_phone },
+          { label: "Mother", name: student.mother_name, phone: student.mother_phone },
+        ] as const
+      )
+        .filter((p) => p.phone)
+        .map((p) => ({
+          label: p.label,
+          parentName: p.name,
+          phone: p.phone!,
+          message: parentLinkMessage({ parentName: p.name, studentName: student.name, url: parentUrl, centreName: centre.name }),
+        }))
+    : [];
 
   const attendancePct =
     stats && stats.total_days > 0 ? Math.round((stats.present_days / stats.total_days) * 100) : null;
@@ -195,6 +218,8 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
           <FileText aria-hidden /> Report card (PDF)
         </Link>
       </Button>
+
+      <ParentLinkCard studentId={student.id} studentName={student.name} url={parentUrl} recipients={linkRecipients} />
 
       {/* Attendance calendar */}
       <section className="mt-8">

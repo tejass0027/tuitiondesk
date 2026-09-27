@@ -54,3 +54,8 @@ export function absenceMessage(v: {
 export function customMessageStart(v: { parentName: string; centreName: string }): string {
   return `${greeting(v.parentName)}, \n\n– ${v.centreName}`;
 }
+
+/** Sends the parent their child's read-only page (attendance, marks, fees). */
+export function parentLinkMessage(v: { parentName: string; studentName: string; url: string; centreName: string }): string {
+  return `${greeting(v.parentName)}, you can now see ${v.studentName}'s attendance, test marks and fees any time on this link:\n${v.url}\n\nPlease don't share it with others. – ${v.centreName}`;
+}

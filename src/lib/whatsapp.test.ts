@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { absenceMessage, feeReminderMessage, formatMonthList, whatsappLink } from "./whatsapp";
+import { absenceMessage, feeReminderMessage, formatMonthList, parentLinkMessage, whatsappLink } from "./whatsapp";
 
 describe("whatsappLink", () => {
   it("encodes the message into a wa.me link", () => {
@@ -71,5 +71,19 @@ describe("formatMonthList", () => {
   it("lists months across years in full", () => {
     expect(formatMonthList(["2026-01-01", "2025-12-01"])).toBe("December 2025 and January 2026");
     expect(formatMonthList(["2026-07-01", "2026-08-01", "2026-09-01"])).toBe("July, August and September 2026");
+  });
+});
+
+describe("parentLinkMessage", () => {
+  it("greets the parent and includes the link", () => {
+    const msg = parentLinkMessage({
+      parentName: "Sunita",
+      studentName: "Aarav",
+      url: "https://tuitiondesk.app/p/abc",
+      centreName: "Sharma Classes",
+    });
+    expect(msg).toContain("Namaste Sunita, you can now see Aarav's attendance");
+    expect(msg).toContain("\nhttps://tuitiondesk.app/p/abc\n");
+    expect(msg.endsWith("– Sharma Classes")).toBe(true);
   });
 });
