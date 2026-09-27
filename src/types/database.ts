@@ -101,6 +101,8 @@ export type Database = {
           mother_name: string;
           mother_phone: string | null;
           contact_parent: "father" | "mother" | "both";
+          photo_path: string | null;
+          share_token: string | null;
           joining_date: string;
           monthly_fee: number;
           is_active: boolean;
@@ -119,6 +121,8 @@ export type Database = {
           mother_name?: string;
           mother_phone?: string | null;
           contact_parent?: "father" | "mother" | "both";
+          photo_path?: string | null;
+          share_token?: string | null;
           joining_date?: string;
           monthly_fee?: number;
           is_active?: boolean;
@@ -137,6 +141,8 @@ export type Database = {
           mother_name?: string;
           mother_phone?: string | null;
           contact_parent?: "father" | "mother" | "both";
+          photo_path?: string | null;
+          share_token?: string | null;
           joining_date?: string;
           monthly_fee?: number;
           is_active?: boolean;
@@ -413,6 +419,12 @@ export type Database = {
         Update: { id?: string; centre_id?: string; name?: string; sort_order?: number; created_at?: string };
         Relationships: [];
       };
+      holidays: {
+        Row: { id: string; centre_id: string; date: string; name: string; created_at: string };
+        Insert: { id?: string; centre_id?: string; date: string; name?: string; created_at?: string };
+        Update: { id?: string; centre_id?: string; date?: string; name?: string; created_at?: string };
+        Relationships: [];
+      };
     };
     Views: {
       fee_overview: {
@@ -458,6 +470,10 @@ export type Database = {
       };
     };
     Functions: {
+      parent_view: {
+        Args: { p_token: string };
+        Returns: Json | null;
+      };
       rename_class: {
         Args: { p_class_id: string; p_new_name: string };
         Returns: undefined;

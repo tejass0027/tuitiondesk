@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CalendarCheck, Layers, Plus, UserPlus } from "lucide-react";
 import { getCentre } from "@/lib/auth";
+import { signPhotoUrls } from "@/lib/photos";
 import { dayKeyOf, formatTimeRange } from "@/lib/batches";
 import { isISODate } from "@/lib/calendar";
 import { todayIST } from "@/lib/format";
@@ -58,7 +59,7 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
   const [{ data: students }, { data: marks }, { count: batchSize }] = await Promise.all([
     supabase
       .from("students")
-      .select("id, name, class, parent_name, parent_whatsapp, father_name, father_phone, mother_name, mother_phone, contact_parent")
+      .select("id, name, class, parent_name, parent_whatsapp, father_name, father_phone, mother_name, mother_phone, contact_parent, photo_path")
       .eq("batch_id", batch.id)
       .eq("is_active", true)
       .lte("joining_date", date)
@@ -71,6 +72,7 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
       .eq("is_active", true),
   ]);
 
+  const photos = await signPhotoUrls(supabase, (students ?? []).map((s) => s.photo_path));
   const saved: Record<string, AttendanceStatus> = Object.fromEntries(
     (marks ?? []).map((m) => [m.student_id, m.status]),
   );
@@ -158,7 +160,7 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
             centreName={centre.name}
             today={today}
             date={date}
-            students={students}
+            students={students.map((s) => ({ ...s, photoUrl: s.photo_path ? photos[s.photo_path] : null }))}
             saved={saved}
           />
         )}

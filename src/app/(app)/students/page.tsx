@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, FileSpreadsheet, Plus, SearchX, Users } from "lucide-react";
 import { getCentre } from "@/lib/auth";
+import { signPhotoUrls } from "@/lib/photos";
 import { cn } from "@/lib/utils";
 import { classLabel } from "@/lib/classes";
 import { PageHeader } from "@/components/layout/page-header";
@@ -24,7 +25,7 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
 
   let query = supabase
     .from("students")
-    .select("id, name, class, parent_name, is_active, batch_id, batches(name)")
+    .select("id, name, class, parent_name, is_active, batch_id, photo_path, batches(name)")
     .order("is_active", { ascending: false })
     .order("name");
   if (batchFilter) query = query.eq("batch_id", batchFilter);
@@ -44,6 +45,7 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
     supabase.from("classes").select("name, sort_order").order("sort_order").order("name"),
   ]);
 
+  const photos = await signPhotoUrls(supabase, (students ?? []).map((s) => s.photo_path));
   const addHref = batchFilter ? `/students/new?batch=${batchFilter}` : "/students/new";
   const hasNoStudentsAtAll = totalCount === 0;
   const activeCount = students?.filter((s) => s.is_active).length ?? 0;
@@ -149,7 +151,7 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
                       !s.is_active && "opacity-60",
                     )}
                   >
-                    <InitialsAvatar name={s.name} />
+                    <InitialsAvatar name={s.name} photoUrl={s.photo_path ? photos[s.photo_path] : null} />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <p className="truncate text-lg font-semibold">{s.name}</p>

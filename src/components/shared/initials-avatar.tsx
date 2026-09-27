@@ -15,7 +15,21 @@ export function initials(name: string) {
   return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
 }
 
-export function InitialsAvatar({ name, className }: { name: string; className?: string }) {
+/** Round avatar: the student's photo when there is one, otherwise coloured initials. */
+export function InitialsAvatar({ name, photoUrl, className }: { name: string; photoUrl?: string | null; className?: string }) {
+  if (photoUrl) {
+    return (
+      // Signed Supabase URLs change every visit, so a plain <img> is simpler than next/image here
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={photoUrl}
+        alt=""
+        aria-hidden
+        loading="lazy"
+        className={cn("size-12 shrink-0 rounded-full bg-muted object-cover", className)}
+      />
+    );
+  }
   const tone = TONES[[...name].reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % TONES.length];
   return (
     <span

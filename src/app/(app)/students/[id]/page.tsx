@@ -8,7 +8,6 @@ import { isISOMonth, monthEnd } from "@/lib/calendar";
 import { AttendanceCalendar } from "@/components/attendance/attendance-calendar";
 import { formatPhone } from "@/lib/phone";
 import { PageHeader } from "@/components/layout/page-header";
-import { InitialsAvatar } from "@/components/shared/initials-avatar";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,8 @@ import { classLabel } from "@/lib/classes";
 import { paymentModeLabel } from "@/lib/fees";
 import { PaymentSheet } from "@/app/(app)/fees/payment-sheet";
 import { RemovePaymentButton } from "./remove-payment-button";
+import { PhotoPicker } from "./photo-picker";
+import { signPhotoUrls } from "@/lib/photos";
 import { ReceiptButton } from "@/components/fees/receipt-button";
 import { ReminderSheet } from "@/components/reminders/reminder-sheet";
 import { customMessageStart } from "@/lib/whatsapp";
@@ -66,6 +67,7 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
     : null;
 
   if (!student) notFound();
+  const photoUrl = student.photo_path ? ((await signPhotoUrls(supabase, [student.photo_path]))[student.photo_path] ?? null) : null;
 
   const { data: payments } = fees?.length
     ? await supabase
@@ -96,7 +98,7 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
 
       {/* Who they are */}
       <section className="flex items-center gap-4 rounded-2xl bg-card p-5 shadow-sm ring-1 ring-foreground/8">
-        <InitialsAvatar name={student.name} className="size-16 text-xl" />
+        <PhotoPicker studentId={student.id} centreId={centre.id} name={student.name} photoUrl={photoUrl} />
         <div className="min-w-0 flex-1">
           <p className="text-lg font-semibold">
             {[student.class && classLabel(student.class), student.batches?.name].filter(Boolean).join(" · ")}

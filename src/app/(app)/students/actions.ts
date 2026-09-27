@@ -6,6 +6,7 @@ import { getCentre } from "@/lib/auth";
 import { type ActionState, invalid } from "@/lib/action-state";
 import { parseAmount } from "@/lib/batches";
 import { normalizeIndianPhone } from "@/lib/phone";
+import { isOwnPhotoPath, PHOTO_BUCKET } from "@/lib/photos";
 
 /** Optional phone: "" -> null, otherwise must be a valid number. */
 const optionalPhone = z
@@ -106,9 +107,45 @@ export async function setStudentActive(studentId: string, isActive: boolean): Pr
 
 export async function deleteStudent(studentId: string): Promise<ActionState> {
   const { supabase } = await getCentre();
+  const { data: student } = await supabase.from("students").select("photo_path").eq("id", studentId).maybeSingle();
   const { error } = await supabase.from("students").delete().eq("id", studentId);
   if (error) return { ok: false, message: "Could not delete the student." };
+  if (student?.photo_path) await supabase.storage.from(PHOTO_BUCKET).remove([student.photo_path]);
 
   refresh();
   return { ok: true, message: "Student deleted" };
+}
+
+/**
+ * The browser has already uploaded the new photo to storage (see PhotoPicker);
+ * this saves its path on the student and deletes the old photo.
+ */
+export async function setStudentPhoto(studentId: string, path: string): Promise<ActionState> {
+  const { supabase, centre } = await getCentre();
+  if (!isOwnPhotoPath(path, centre.id, studentId)) return { ok: false, message: "Could not save the photo." };
+
+  const { data: student } = await supabase.from("students").select("photo_path").eq("id", studentId).maybeSingle();
+  if (!student) return { ok: false, message: "Student not found." };
+
+  const { error } = await supabase.from("students").update({ photo_path: path }).eq("id", studentId);
+  if (error) return { ok: false, message: "Could not save the photo." };
+  if (student.photo_path && student.photo_path !== path) {
+    await supabase.storage.from(PHOTO_BUCKET).remove([student.photo_path]);
+  }
+
+  refresh();
+  return { ok: true, message: "Photo saved" };
+}
+
+export async function removeStudentPhoto(studentId: string): Promise<ActionState> {
+  const { supabase } = await getCentre();
+  const { data: student } = await supabase.from("students").select("photo_path").eq("id", studentId).maybeSingle();
+  if (!student?.photo_path) return { ok: true, message: "Photo removed" };
+
+  const { error } = await supabase.from("students").update({ photo_path: null }).eq("id", studentId);
+  if (error) return { ok: false, message: "Could not remove the photo." };
+  await supabase.storage.from(PHOTO_BUCKET).remove([student.photo_path]);
+
+  refresh();
+  return { ok: true, message: "Photo removed" };
 }

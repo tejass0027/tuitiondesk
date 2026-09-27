@@ -24,6 +24,7 @@ type SheetStudent = {
   mother_name: string;
   mother_phone: string | null;
   contact_parent: ContactParent;
+  photoUrl?: string | null;
 };
 
 type Props = {
@@ -114,7 +115,7 @@ export function AttendanceSheet({ batchId, batchName, centreName, today, date, s
                     : "border-danger/40 bg-danger-soft",
                 )}
               >
-                <InitialsAvatar name={s.name} />
+                <InitialsAvatar name={s.name} photoUrl={s.photoUrl} />
                 <span className="min-w-0 flex-1">
                   <span className="block text-lg leading-snug font-semibold break-words">{s.name}</span>
                   {s.class && <span className="block text-sm text-muted-foreground">{classLabel(s.class)}</span>}
