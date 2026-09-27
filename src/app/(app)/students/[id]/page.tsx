@@ -17,6 +17,7 @@ import { classLabel } from "@/lib/classes";
 import { paymentModeLabel } from "@/lib/fees";
 import { PaymentSheet } from "@/app/(app)/fees/payment-sheet";
 import { RemovePaymentButton } from "./remove-payment-button";
+import { ReceiptButton } from "@/components/fees/receipt-button";
 import { ReminderSheet } from "@/components/reminders/reminder-sheet";
 import { customMessageStart } from "@/lib/whatsapp";
 import { formatMarks, percentOf, scoreBand } from "@/lib/marks";
@@ -303,6 +304,7 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
                             {p.note && ` · ${p.note}`}
                           </span>
                           <span className="font-semibold">{formatINR(p.amount)}</span>
+                          <ReceiptButton paymentId={p.id} studentName={student.name} />
                           <RemovePaymentButton
                             paymentId={p.id}
                             description={`${formatINR(p.amount)} by ${paymentModeLabel(p.mode)} on ${formatDate(p.paid_on)}`}

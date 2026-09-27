@@ -20,6 +20,7 @@ import { PAYMENT_MODES } from "@/lib/fees";
 import { cn } from "@/lib/utils";
 import type { PaymentMode } from "@/types/database";
 import { deletePayment, recordPayment } from "./actions";
+import { shareReceipt } from "@/components/fees/receipt-button";
 
 export type PayableFee = {
   id: string;
@@ -85,7 +86,11 @@ function PaymentForm({ fee, onDone }: { fee: PayableFee; onDone: () => void }) {
     }
     const paymentId = state.id;
     toast.success(state.message, {
+      // Send the receipt straight away, or undo a mistake
       action: paymentId
+        ? { label: "Receipt", onClick: () => void shareReceipt(paymentId, fee.student_name) }
+        : undefined,
+      cancel: paymentId
         ? {
             label: "Undo",
             onClick: async () => {
@@ -95,7 +100,7 @@ function PaymentForm({ fee, onDone }: { fee: PayableFee; onDone: () => void }) {
             },
           }
         : undefined,
-      duration: 8000,
+      duration: 10000,
     });
     onDone();
     // eslint-disable-next-line react-hooks/exhaustive-deps
