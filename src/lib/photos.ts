@@ -22,5 +22,5 @@ export async function signPhotoUrls(
 
 /** A photo path must sit in this centre's folder and be named after this student. */
 export function isOwnPhotoPath(path: string, centreId: string, studentId: string): boolean {
-  return new RegExp(`^${centreId}/${studentId}-\d{10,16}\.jpg$`).test(path);
+  return path.startsWith(`${centreId}/${studentId}-`) && /-\d{10,16}\.jpg$/.test(path);
 }

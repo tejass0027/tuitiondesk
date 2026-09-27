@@ -130,9 +130,11 @@ export async function setStudentPhoto(studentId: string, path: string): Promise<
 
   const { error } = await supabase.from("students").update({ photo_path: path }).eq("id", studentId);
   if (error) return { ok: false, message: "Could not save the photo." };
-  if (student.photo_path && student.photo_path !== path) {
-    await supabase.storage.from(PHOTO_BUCKET).remove([student.photo_path]);
-  }
+
+  // Delete this student's older photos (and any half-finished uploads)
+  const { data: files } = await supabase.storage.from(PHOTO_BUCKET).list(centre.id, { search: studentId });
+  const old = (files ?? []).map((f) => `${centre.id}/${f.name}`).filter((p) => p !== path && p.includes(`/${studentId}-`));
+  if (old.length) await supabase.storage.from(PHOTO_BUCKET).remove(old);
 
   refresh();
   return { ok: true, message: "Photo saved" };

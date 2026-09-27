@@ -66,7 +66,8 @@ export function PhotoPicker({
       toast.success("Photo saved");
       setOpen(false);
       router.refresh();
-    } catch {
+    } catch (err) {
+      console.error("Photo upload failed", err);
       toast.error("Could not save the photo. Please try again.");
     } finally {
       setBusy(null);
