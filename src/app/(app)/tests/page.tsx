@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CalendarDays, ChevronRight, Layers, NotebookPen, Plus } from "lucide-react";
 import { getCentre } from "@/lib/auth";
+import { todayIST } from "@/lib/format";
 import { formatDate } from "@/lib/format";
 import { formatMarks, scoreBand, summarizeMarks } from "@/lib/marks";
 import { cn } from "@/lib/utils";
@@ -30,13 +31,14 @@ export default async function TestsPage({ searchParams }: PageProps<"/tests">) {
     .limit(100);
   if (batchFilter) query = query.eq("batch_id", batchFilter);
 
-  const [{ data: tests }, { data: batches }, { data: students }] = await Promise.all([
+  const [{ data: tests }, { data: batches }, { data: sizes }] = await Promise.all([
     query,
     supabase.from("batches").select("id, name").eq("is_active", true).order("name"),
-    supabase.from("students").select("batch_id").eq("is_active", true),
+    supabase.rpc("batch_day_counts", { p_date: todayIST() }), // students per batch, counted in the database
   ]);
 
-  const batchSize = (id: string) => (students ?? []).filter((s) => s.batch_id === id).length;
+  const sizeOf = new Map((sizes ?? []).map((b) => [b.batch_id, b.size]));
+  const batchSize = (id: string) => sizeOf.get(id) ?? 0;
   const newHref = batchFilter ? `/tests/new?batch=${batchFilter}` : "/tests/new";
 
   if (!batches?.length) {

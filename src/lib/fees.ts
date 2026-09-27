@@ -21,6 +21,15 @@ export function summarizeFees(rows: FeeRow[]) {
   return { expected, collected, pending, percent };
 }
 
+/** Same numbers as summarizeFees, from a row the database already added up (fee_month_totals). */
+export function summarizeTotals(t?: { expected: number | string; collected: number | string; pending: number | string } | null) {
+  const expected = Number(t?.expected ?? 0);
+  const collected = Number(t?.collected ?? 0);
+  const pending = Number(t?.pending ?? 0);
+  const percent = expected > 0 ? Math.round((collected / expected) * 100) : 0;
+  return { expected, collected, pending, percent };
+}
+
 /** Fee is partly paid: something received, but not all of it. */
 export function isPartlyPaid(row: { amount_paid: number; balance: number }) {
   return Number(row.amount_paid) > 0 && Number(row.balance) > 0;

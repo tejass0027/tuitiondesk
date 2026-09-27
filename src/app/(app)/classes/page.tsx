@@ -10,16 +10,17 @@ export const metadata: Metadata = { title: "Classes" };
 
 export default async function ClassesPage() {
   const { supabase } = await getCentre();
-  const [{ data: classes }, { data: students }] = await Promise.all([
+  const [{ data: classes }, { data: perClass }, { count: activeCount }] = await Promise.all([
     supabase.from("classes").select("id, name, sort_order").order("sort_order").order("name"),
-    supabase.from("students").select("class").eq("is_active", true),
+    supabase.rpc("class_counts"), // counted in the database
+    supabase.from("students").select("id", { count: "exact", head: true }).eq("is_active", true),
   ]);
 
   const list = [...(classes ?? [])].sort((a, b) => a.sort_order - b.sort_order || compareClassNames(a.name, b.name));
-  const countFor = (name: string) =>
-    (students ?? []).filter((s) => s.class.trim().toLowerCase() === name.toLowerCase()).length;
+  const counts = new Map((perClass ?? []).map((c) => [c.class_key, c.students]));
+  const countFor = (name: string) => counts.get(name.trim().toLowerCase()) ?? 0;
   const inAClass = list.reduce((sum, c) => sum + countFor(c.name), 0);
-  const withoutClass = (students ?? []).length - inAClass;
+  const withoutClass = (activeCount ?? 0) - inAClass;
 
   return (
     <>

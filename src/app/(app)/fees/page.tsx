@@ -13,7 +13,10 @@ import {
 import { getCentre } from "@/lib/auth";
 import { addMonths, isISOMonth } from "@/lib/calendar";
 import { formatDate, formatINR, formatMonth, todayIST } from "@/lib/format";
-import { isPartlyPaid, paymentModeLabel, summarizeFees } from "@/lib/fees";
+import { isPartlyPaid, paymentModeLabel, summarizeTotals } from "@/lib/fees";
+import { PAGE_SIZE, pageSize } from "@/lib/paging";
+import { inChunks } from "@/lib/fetch-all";
+import { ShowMore } from "@/components/shared/show-more";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -49,66 +52,61 @@ export default async function FeesPage({ searchParams }: PageProps<"/fees">) {
   // Make sure every active student has this month's fee entry (safe to repeat)
   await supabase.rpc("generate_monthly_fees");
 
-  const [{ data: monthRowsAll }, { data: overdueRowsAll }, { count: studentCount }, { data: classes }] = await Promise.all([
-    supabase.from("fee_overview").select("*").eq("month", monthStart).order("student_name"),
-    // Overdue includes older months that are still unpaid
-    supabase
-      .from("fee_overview")
-      .select("*")
-      .eq("status", "overdue")
-      .lte("month", monthStart)
-      .order("month")
-      .order("student_name"),
+  const cls = classFilter || null;
+  const show = pageSize(params.show);
+
+  // Totals and tab counts are added up by the database (right even with 1000s of fees)
+  const [{ data: totals }, { data: overdueTotals }, { count: studentCount }, { data: classes }] = await Promise.all([
+    supabase.rpc("fee_month_totals", { p_from: monthStart, p_to: monthStart, p_class: cls }),
+    supabase.rpc("overdue_totals", { p_month: monthStart, p_class: cls }),
     supabase.from("students").select("id", { count: "exact", head: true }),
     supabase.from("classes").select("name, sort_order").order("sort_order").order("name"),
   ]);
+  const t = totals?.[0];
+  const o = overdueTotals?.[0];
+  const counts: Record<TabKey, number> = { due: t?.due_count ?? 0, overdue: o?.fees ?? 0, paid: t?.paid_count ?? 0 };
 
-  // Optional ?class= filter (matches the student's class, any capitalisation)
-  const inClass = (r: { student_class: string }) =>
-    !classFilter || r.student_class.trim().toLowerCase() === classFilter.toLowerCase();
-  const monthRows = (monthRowsAll ?? []).filter(inClass);
-  const overdueRows = (overdueRowsAll ?? []).filter(inClass);
+  const requestedTab = TABS.find((x) => x.key === params.tab)?.key;
+  const tab: TabKey = requestedTab ?? (counts.overdue ? "overdue" : "due");
 
-  const rows = monthRows;
-  const overdue = overdueRows;
-  const byTab: Record<TabKey, FeeOverview[]> = {
-    due: rows.filter((r) => r.status === "due"),
-    overdue,
-    paid: rows.filter((r) => r.status === "paid"),
-  };
-  const requestedTab = TABS.find((t) => t.key === params.tab)?.key;
-  const tab: TabKey = requestedTab ?? (overdue.length ? "overdue" : "due");
-  const list = byTab[tab];
+  // Only the first `show` rows of the chosen tab are loaded ("Show more" loads the next 50)
+  let query = supabase.from("fee_overview").select("*");
+  query =
+    tab === "overdue"
+      ? query.eq("status", "overdue").lte("month", monthStart).order("month") // includes older unpaid months
+      : query.eq("status", tab).eq("month", monthStart);
+  if (classFilter) query = query.ilike("student_class", classFilter.replace(/[%_\\]/g, ""));
+  const { data: listRows } = await query.order("student_name").order("id").range(0, show - 1);
+  const list: FeeOverview[] = listRows ?? [];
 
   // How the paid fees were paid (cash / UPI / bank), newest payment wins
   const modeByFee = new Map<string, string>();
-  if (tab === "paid" && byTab.paid.length) {
-    const { data: payments } = await supabase
-      .from("payments")
-      .select("fee_record_id, mode")
-      .in("fee_record_id", byTab.paid.map((r) => r.id))
-      .order("paid_on");
-    for (const p of payments ?? []) modeByFee.set(p.fee_record_id, paymentModeLabel(p.mode));
+  if (tab === "paid" && list.length) {
+    const payments = await inChunks(
+      list.map((r) => r.id),
+      (ids) => supabase.from("payments").select("fee_record_id, mode, paid_on").in("fee_record_id", ids),
+    );
+    payments.sort((a, b) => a.paid_on.localeCompare(b.paid_on));
+    for (const p of payments) modeByFee.set(p.fee_record_id, paymentModeLabel(p.mode));
   }
 
   // When was each unpaid fee last reminded? (helps avoid reminding twice)
   const lastReminded = new Map<string, string>();
   const unpaidIds = list.filter((r) => r.status !== "paid").map((r) => r.id);
   if (unpaidIds.length) {
-    const { data: logs } = await supabase
-      .from("reminder_logs")
-      .select("fee_record_id, sent_at")
-      .in("fee_record_id", unpaidIds)
-      .order("sent_at");
-    for (const l of logs ?? []) if (l.fee_record_id) lastReminded.set(l.fee_record_id, l.sent_at);
+    const logs = await inChunks(unpaidIds, (ids) =>
+      supabase.from("reminder_logs").select("fee_record_id, sent_at").in("fee_record_id", ids),
+    );
+    logs.sort((a, b) => a.sent_at.localeCompare(b.sent_at));
+    for (const l of logs) if (l.fee_record_id) lastReminded.set(l.fee_record_id, l.sent_at);
   }
 
-  const summary = summarizeFees(rows);
-  const olderOverdue = overdue.filter((r) => r.month < monthStart);
-  const olderOverdueTotal = olderOverdue.reduce((s, r) => s + Number(r.balance), 0);
+  const summary = summarizeTotals(t);
+  const olderOverdueCount = o?.older_fees ?? 0;
+  const olderOverdueTotal = Number(o?.older_amount ?? 0);
 
-  const hrefFor = (m: string, t: TabKey = tab, cls = classFilter) =>
-    `/fees?month=${m}&tab=${t}${cls ? `&class=${encodeURIComponent(cls)}` : ""}`;
+  const hrefFor = (m: string, tb: TabKey = tab, c = classFilter, n?: number) =>
+    `/fees?month=${m}&tab=${tb}${c ? `&class=${encodeURIComponent(c)}` : ""}${n ? `&show=${n}` : ""}`;
 
   if (studentCount === 0) {
     return (
@@ -186,7 +184,7 @@ export default async function FeesPage({ searchParams }: PageProps<"/fees">) {
         </p>
         {olderOverdueTotal > 0 && (
           <p className="mt-3 rounded-xl bg-danger-soft px-3 py-2 text-sm font-medium text-danger">
-            + {formatINR(olderOverdueTotal)} still unpaid from earlier months ({olderOverdue.length})
+            + {formatINR(olderOverdueTotal)} still unpaid from earlier months ({olderOverdueCount})
           </p>
         )}
       </section>
@@ -195,7 +193,7 @@ export default async function FeesPage({ searchParams }: PageProps<"/fees">) {
       <nav aria-label="Fee status" className="mt-6 grid grid-cols-3 gap-1 rounded-2xl bg-muted p-1.5">
         {TABS.map((t) => {
           const active = t.key === tab;
-          const count = byTab[t.key].length;
+          const count = counts[t.key];
           return (
             <Link
               key={t.key}
@@ -224,10 +222,10 @@ export default async function FeesPage({ searchParams }: PageProps<"/fees">) {
 
       {/* List */}
       <div className="mt-4 grid grid-cols-1 gap-3">
-        {tab === "overdue" && overdue.length > 0 && (
+        {tab === "overdue" && counts.overdue > 0 && (
           <Button asChild size="lg" className="w-full">
             <Link href="/fees/remind">
-              <BellRing aria-hidden /> Remind all overdue ({new Set(overdue.map((o) => o.student_id)).size})
+              <BellRing aria-hidden /> Remind all overdue ({o?.students ?? 0})
             </Link>
           </Button>
         )}
@@ -255,6 +253,7 @@ export default async function FeesPage({ searchParams }: PageProps<"/fees">) {
             ))}
           </ul>
         )}
+        <ShowMore shown={list.length} total={counts[tab]} href={hrefFor(month, tab, classFilter, show + PAGE_SIZE)} />
       </div>
     </>
   );

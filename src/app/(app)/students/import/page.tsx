@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Layers, Plus } from "lucide-react";
 import { getCentre } from "@/lib/auth";
 import { studentKey } from "@/lib/import";
+import { fetchAll } from "@/lib/fetch-all";
 import { todayIST } from "@/lib/format";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -13,13 +14,16 @@ export const metadata: Metadata = { title: "Import students" };
 
 export default async function ImportStudentsPage() {
   const { supabase } = await getCentre();
-  const [{ data: batches }, { data: students }] = await Promise.all([
+  const [{ data: batches }, students] = await Promise.all([
     supabase.from("batches").select("id, name, monthly_fee").eq("is_active", true).order("name"),
-    supabase.from("students").select("name, father_phone, mother_phone, parent_whatsapp"),
+    // every student, however many (1000 per request)
+    fetchAll((from, to) =>
+      supabase.from("students").select("name, father_phone, mother_phone, parent_whatsapp").order("id").range(from, to),
+    ),
   ]);
 
   // name + phone of everyone already added, to flag repeats before saving
-  const existing = (students ?? []).flatMap((s) =>
+  const existing = students.flatMap((s) =>
     [s.father_phone, s.mother_phone, s.parent_whatsapp].filter(Boolean).map((p) => studentKey(s.name, p)),
   );
 

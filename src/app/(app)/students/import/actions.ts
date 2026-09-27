@@ -6,6 +6,7 @@ import { getCentre } from "@/lib/auth";
 import { compareClassNames } from "@/lib/classes";
 import type { ActionState } from "@/lib/action-state";
 import { type ImportStudent, studentKey } from "@/lib/import";
+import { fetchAll } from "@/lib/fetch-all";
 
 const phone = z.string().regex(/^[0-9]{10,15}$/).nullable();
 
@@ -38,9 +39,11 @@ export async function importStudents(rows: ImportStudent[]): Promise<ActionState
   const { supabase } = await getCentre();
 
   // Skip anyone already in the app (e.g. the same sheet uploaded twice)
-  const { data: existing } = await supabase.from("students").select("name, father_phone, mother_phone, parent_whatsapp");
+  const existing = await fetchAll((from, to) =>
+    supabase.from("students").select("name, father_phone, mother_phone, parent_whatsapp").order("id").range(from, to),
+  );
   const known = new Set(
-    (existing ?? []).flatMap((s) =>
+    existing.flatMap((s) =>
       [s.father_phone, s.mother_phone, s.parent_whatsapp].filter(Boolean).map((p) => studentKey(s.name, p)),
     ),
   );

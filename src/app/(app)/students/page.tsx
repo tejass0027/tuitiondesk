@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, FileSpreadsheet, Plus, SearchX, Users } from "lucide-react";
 import { getCentre } from "@/lib/auth";
+import { PAGE_SIZE, pageSize } from "@/lib/paging";
+import { ShowMore } from "@/components/shared/show-more";
 import { signPhotoUrls } from "@/lib/photos";
 import { cn } from "@/lib/utils";
 import { classLabel } from "@/lib/classes";
@@ -25,9 +27,10 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
 
   let query = supabase
     .from("students")
-    .select("id, name, class, parent_name, is_active, batch_id, photo_path, batches(name)")
+    .select("id, name, class, parent_name, is_active, batch_id, photo_path, batches(name)", { count: "exact" })
     .order("is_active", { ascending: false })
-    .order("name");
+    .order("name")
+    .order("id");
   if (batchFilter) query = query.eq("batch_id", batchFilter);
   if (classFilter) query = query.ilike("class", classFilter.replace(/[%_\\]/g, ""));
   if (q) {
@@ -38,8 +41,10 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
     );
   }
 
-  const [{ data: students }, { data: batches }, { count: totalCount }, { data: classes }] = await Promise.all([
-    query,
+  // 50 students at a time; "Show more" loads the next 50
+  const show = pageSize(params.show);
+  const [{ data: students, count: matching }, { data: batches }, { count: totalCount }, { data: classes }] = await Promise.all([
+    query.range(0, show - 1),
     supabase.from("batches").select("id, name").eq("is_active", true).order("name"),
     supabase.from("students").select("id", { count: "exact", head: true }),
     supabase.from("classes").select("name, sort_order").order("sort_order").order("name"),
@@ -48,14 +53,16 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
   const photos = await signPhotoUrls(supabase, (students ?? []).map((s) => s.photo_path));
   const addHref = batchFilter ? `/students/new?batch=${batchFilter}` : "/students/new";
   const hasNoStudentsAtAll = totalCount === 0;
-  const activeCount = students?.filter((s) => s.is_active).length ?? 0;
+  const matchingCount = matching ?? students?.length ?? 0;
 
   return (
     <>
       <PageHeader
         title="Students"
         description={
-          hasNoStudentsAtAll ? undefined : `${activeCount} active${q || batchFilter || classFilter ? " shown" : ""}`
+          hasNoStudentsAtAll
+            ? undefined
+            : `${matchingCount.toLocaleString("en-IN")} ${matchingCount === 1 ? "student" : "students"}${q || batchFilter || classFilter ? " found" : ""}`
         }
         action={
           !hasNoStudentsAtAll && (
@@ -167,17 +174,19 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
               ))}
             </ul>
           )}
+          <ShowMore shown={students?.length ?? 0} total={matchingCount} href={hrefWith(q, batchFilter, classFilter, show + PAGE_SIZE)} />
         </div>
       )}
     </>
   );
 }
 
-function hrefWith(q: string, batch: string, cls = "") {
+function hrefWith(q: string, batch: string, cls = "", show?: number) {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
   if (batch) params.set("batch", batch);
   if (cls) params.set("class", cls);
+  if (show) params.set("show", String(show));
   const s = params.toString();
   return s ? `/students?${s}` : "/students";
 }

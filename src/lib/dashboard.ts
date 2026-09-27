@@ -1,7 +1,7 @@
 import { addMonths } from "@/lib/calendar";
-import { summarizeFees } from "@/lib/fees";
 
-type FeeRow = { month: string; amount_due: number; amount_paid: number; balance: number };
+/** One month's fee totals, as the database's fee_month_totals() returns them. */
+type MonthTotals = { month: string; collected: number | string; pending: number | string };
 
 export type MonthPoint = {
   month: string; // "yyyy-MM"
@@ -17,28 +17,17 @@ export function lastMonths(endMonth: string, count: number): string[] {
   return Array.from({ length: count }, (_, i) => addMonths(endMonth, i - count + 1));
 }
 
-/** Collected vs pending per month, including months with no fees (as zeros). */
-export function feeSeries(rows: FeeRow[], months: string[]): MonthPoint[] {
+/** Collected vs pending per month for the chart, with months that have no fees as zeros. */
+export function feeSeries(totals: MonthTotals[], months: string[]): MonthPoint[] {
   return months.map((m) => {
-    const { collected, pending } = summarizeFees(rows.filter((r) => r.month.startsWith(m)));
-    return { month: m, label: SHORT_MONTHS[Number(m.slice(5, 7)) - 1], collected, pending };
+    const t = totals.find((r) => r.month.startsWith(m));
+    return {
+      month: m,
+      label: SHORT_MONTHS[Number(m.slice(5, 7)) - 1],
+      collected: Number(t?.collected ?? 0),
+      pending: Number(t?.pending ?? 0),
+    };
   });
-}
-
-type AttendanceStat = {
-  student_id: string;
-  student_name: string;
-  recent_total: number;
-  recent_present: number;
-};
-
-/** Students whose attendance over the last 30 days is below the threshold, worst first. */
-export function lowAttendance(stats: AttendanceStat[], threshold = 75) {
-  return stats
-    .filter((s) => s.recent_total > 0)
-    .map((s) => ({ ...s, percent: Math.round((s.recent_present / s.recent_total) * 100) }))
-    .filter((s) => s.percent < threshold)
-    .sort((a, b) => a.percent - b.percent || a.student_name.localeCompare(b.student_name));
 }
 
 /** "₹12K", "₹1.2L", "₹0" for chart axes (Indian short form). */

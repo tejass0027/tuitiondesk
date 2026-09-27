@@ -473,6 +473,52 @@ export type Database = {
       };
     };
     Functions: {
+      fee_month_totals: {
+        Args: { p_from: string; p_to: string; p_class?: string | null };
+        Returns: {
+          month: string;
+          expected: number;
+          collected: number;
+          pending: number;
+          due_count: number;
+          overdue_count: number;
+          paid_count: number;
+        }[];
+      };
+      overdue_totals: {
+        Args: { p_month: string; p_class?: string | null };
+        Returns: { students: number; fees: number; amount: number; older_fees: number; older_amount: number }[];
+      };
+      overdue_students: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          student_id: string;
+          student_name: string;
+          parent_name: string;
+          parent_whatsapp: string;
+          batch_name: string | null;
+          father_name: string;
+          father_phone: string | null;
+          mother_name: string;
+          mother_phone: string | null;
+          contact_parent: "father" | "mother" | "both";
+          months: string[];
+          total: number;
+          latest_fee_id: string;
+        }[];
+      };
+      batch_day_counts: {
+        Args: { p_date: string };
+        Returns: { batch_id: string; size: number; marked: number }[];
+      };
+      class_counts: {
+        Args: Record<PropertyKey, never>;
+        Returns: { class_key: string; students: number }[];
+      };
+      low_attendance: {
+        Args: { p_threshold?: number };
+        Returns: { student_id: string; student_name: string; recent_total: number; recent_present: number; percent: number }[];
+      };
       parent_view: {
         Args: { p_token: string };
         Returns: Json | null;

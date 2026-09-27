@@ -17,9 +17,9 @@ import {
 import { getCentre } from "@/lib/auth";
 import { WEEK_DAYS, dayKeyOf, formatTimeRange } from "@/lib/batches";
 import { formatDate, formatINR, formatMonth, todayIST } from "@/lib/format";
-import { summarizeFees } from "@/lib/fees";
-import { feeSeries, formatINRShort, lastMonths, lowAttendance } from "@/lib/dashboard";
-import { groupOverdueByStudent } from "@/lib/reminders";
+import { summarizeTotals } from "@/lib/fees";
+import { feeSeries, formatINRShort, lastMonths } from "@/lib/dashboard";
+import { toOverdueGroup } from "@/lib/reminders";
 import { feeReminderMessage } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
 import { FeesChart } from "@/components/dashboard/fees-chart";
@@ -35,54 +35,46 @@ export default async function HomePage() {
 
   await supabase.rpc("generate_monthly_fees");
 
+  // Everything is counted inside the database, so the numbers stay right at 1000+ students
   const [
     { data: batches },
-    { data: activeStudents },
-    { data: todaysMarks },
-    { data: fees },
-    { data: overdueRows },
-    { data: stats },
+    { count: activeCount },
+    { data: dayCounts },
+    { data: feeTotals },
+    { data: topOverdue },
+    { data: overdueTotals },
+    { data: low },
     { data: holiday },
   ] = await Promise.all([
     supabase.from("batches").select("id, name, days, start_time, end_time").eq("is_active", true).order("start_time", { nullsFirst: false }),
-    supabase.from("students").select("id, batch_id").eq("is_active", true).lte("joining_date", today),
-    supabase.from("attendance").select("batch_id, student_id").eq("date", today),
-    supabase
-      .from("fee_overview")
-      .select("month, amount_due, amount_paid, balance")
-      .gte("month", `${months[0]}-01`),
-    supabase
-      .from("fee_overview")
-      .select("id, student_id, student_name, parent_name, parent_whatsapp, batch_name, month, balance, father_name, father_phone, mother_name, mother_phone, contact_parent")
-      .eq("status", "overdue")
-      .order("month"),
-    supabase
-      .from("student_attendance_stats")
-      .select("student_id, student_name, recent_total, recent_present")
-      .eq("is_active", true),
+    supabase.from("students").select("id", { count: "exact", head: true }).eq("is_active", true),
+    supabase.rpc("batch_day_counts", { p_date: today }),
+    supabase.rpc("fee_month_totals", { p_from: `${months[0]}-01`, p_to: `${months[months.length - 1]}-01` }),
+    // the 5 students who owe the most
+    supabase.rpc("overdue_students").order("total", { ascending: false }).order("student_name").limit(5),
+    supabase.rpc("overdue_totals", { p_month: today }),
+    supabase.rpc("low_attendance", { p_threshold: 75 }).limit(8),
     supabase.from("holidays").select("name").eq("date", today).maybeSingle(),
   ]);
 
   const hasBatches = Boolean(batches?.length);
-  const hasStudents = Boolean(activeStudents?.length);
+  const hasStudents = Boolean(activeCount);
 
   // Today's batches + whether attendance is done
+  const countsFor = new Map((dayCounts ?? []).map((c) => [c.batch_id, c]));
   const todaysBatches = (batches ?? [])
     .filter((b) => !holiday && b.days.includes(dayKey))
     .map((b) => {
-      const size = (activeStudents ?? []).filter((s) => s.batch_id === b.id).length;
-      const marked = new Set((todaysMarks ?? []).filter((m) => m.batch_id === b.id).map((m) => m.student_id)).size;
+      const { size = 0, marked = 0 } = countsFor.get(b.id) ?? {};
       return { ...b, size, marked, done: size > 0 && marked >= size };
     });
 
   // Fees
-  const thisMonth = summarizeFees((fees ?? []).filter((f) => f.month.startsWith(today.slice(0, 7))));
-  const series = feeSeries(fees ?? [], months);
-  const overdue = groupOverdueByStudent(overdueRows ?? []).sort((a, b) => b.total - a.total);
-  const overdueTotal = overdue.reduce((s, o) => s + o.total, 0);
-
-  // Attendance below 75% (last 30 days)
-  const low = lowAttendance(stats ?? []);
+  const thisMonth = summarizeTotals((feeTotals ?? []).find((t) => t.month.startsWith(today.slice(0, 7))));
+  const series = feeSeries(feeTotals ?? [], months);
+  const overdue = (topOverdue ?? []).map(toOverdueGroup);
+  const overdueCount = overdueTotals?.[0]?.students ?? 0;
+  const overdueTotal = Number(overdueTotals?.[0]?.amount ?? 0);
 
   const weekday = WEEK_DAYS.find((d) => d.key === dayKey)!.label;
 
@@ -206,9 +198,9 @@ export default async function HomePage() {
             icon={CircleAlert}
             href="/fees?tab=overdue"
             linkLabel="See all"
-            subtitle={overdue.length ? `${overdue.length} students · ${formatINR(overdueTotal)}` : undefined}
+            subtitle={overdueCount ? `${overdueCount} ${overdueCount === 1 ? "student" : "students"} · ${formatINR(overdueTotal)}` : undefined}
           >
-            {overdue.length === 0 ? (
+            {overdueCount === 0 ? (
               <p className="flex items-center gap-2 text-base text-muted-foreground">
                 <PartyPopper className="size-5" aria-hidden /> Nobody is overdue. Great job!
               </p>
@@ -246,10 +238,10 @@ export default async function HomePage() {
                     </li>
                   ))}
                 </ul>
-                {overdue.length > 1 && (
+                {overdueCount > 1 && (
                   <Button asChild variant="outline" className="mt-4 w-full">
                     <Link href="/fees/remind">
-                      <BellRing aria-hidden /> Remind all {overdue.length}
+                      <BellRing aria-hidden /> Remind all {overdueCount}
                     </Link>
                   </Button>
                 )}
@@ -259,13 +251,13 @@ export default async function HomePage() {
 
           {/* 4. Low attendance */}
           <Card title="Low attendance" icon={TrendingDown} subtitle="Below 75% in the last 30 days">
-            {low.length === 0 ? (
+            {!low?.length ? (
               <p className="flex items-center gap-2 text-base text-muted-foreground">
                 <CircleCheck className="size-5 text-success" aria-hidden /> Everyone is attending well.
               </p>
             ) : (
               <ul className="grid grid-cols-1 gap-2">
-                {low.slice(0, 8).map((s) => (
+                {low.map((s) => (
                   <li key={s.student_id}>
                     <Link
                       href={`/students/${s.student_id}`}

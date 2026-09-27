@@ -88,6 +88,7 @@ Supabase Postgres
 - **Monthly fees without a cron job.** `generate_monthly_fees()` is *idempotent*: a unique `(student_id, month)` key means calling it on every page load only ever creates the missing rows.
 - **Attendance is one request.** Toggling happens in the browser for instant feedback. Save sends the whole batch as a single **upsert** on the unique `(student_id, batch_id, date)` key, so re-saving a day updates it instead of duplicating it.
 - **Parent link without accounts.** Each student can get a random 32-character token. Anonymous visitors can't read any table; they can only call `parent_view(token)`, which returns just that one student's summary. Clearing the token turns the link off instantly.
+- **Built for 1,000+ students.** The API returns at most 1,000 rows per request, so nothing adds up rows in the app: totals come from SQL functions, long lists load 50 at a time ("Show more"), `.in()` lookups go in chunks of 100, and the few screens that need everything page through it 1,000 rows at a time.
 - **WhatsApp via `wa.me` links.** Free, no approval needed. The message is pre-filled and the owner just taps Send. Because the app can't see inside WhatsApp, the log records "reminder opened".
 
 ---
@@ -105,6 +106,7 @@ Migrations live in [`supabase/migrations`](supabase/migrations):
 | `…_tests_and_marks.sql` | `tests` and `test_marks` with RLS, plus triggers that stop marks going above a test's maximum |
 | `…_both_parents.sql`, `…_message_both_parents.sql` | Father and mother details, and who gets WhatsApp messages (father / mother / both) |
 | `…_photos_holidays_parent_links.sql` | Private `student-photos` storage bucket with per-centre folder policies, the `holidays` table, and `parent_view(token)`: a security-definer function that returns one student's data for a valid parent link |
+| `…_scale_totals.sql` | Totals counted inside Postgres (`fee_month_totals`, `overdue_totals`, `overdue_students`, `batch_day_counts`, `class_counts`, `low_attendance`), so Home and Fees stay correct past the API's 1,000-rows-per-request limit |
 
 ```
 centres ─┬─< batches ─┬─< students ─┬─< attendance

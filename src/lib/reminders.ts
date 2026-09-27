@@ -1,7 +1,7 @@
 import { messageRecipients, type ContactParent, type MessageRecipient } from "@/lib/parents";
 
-type OverdueFee = {
-  id: string;
+/** One row of the database's overdue_students(): a student and all their unpaid, overdue months. */
+export type OverdueStudentRow = {
   student_id: string;
   student_name: string;
   parent_name: string;
@@ -12,8 +12,9 @@ type OverdueFee = {
   mother_phone: string | null;
   contact_parent: ContactParent;
   batch_name: string | null;
-  month: string;
-  balance: number;
+  months: string[];
+  total: number | string;
+  latest_fee_id: string;
 };
 
 export type OverdueGroup = {
@@ -30,30 +31,17 @@ export type OverdueGroup = {
   recipients: MessageRecipient[];
 };
 
-/**
- * Turns overdue fee rows into one entry per student, so a parent with
- * two unpaid months gets a single message with the total.
- * Keeps the order students first appear in.
- */
-export function groupOverdueByStudent(fees: OverdueFee[]): OverdueGroup[] {
-  const byStudent = new Map<string, OverdueGroup>();
-  for (const f of fees) {
-    const group = byStudent.get(f.student_id) ?? {
-      studentId: f.student_id,
-      studentName: f.student_name,
-      parentName: f.parent_name,
-      phone: f.parent_whatsapp,
-      batchName: f.batch_name,
-      months: [],
-      total: 0,
-      latestFeeId: f.id,
-      recipients: messageRecipients(f),
-    };
-    const isNewest = group.months.every((m) => f.month >= m);
-    group.months.push(f.month);
-    group.total += Number(f.balance);
-    if (isNewest) group.latestFeeId = f.id;
-    byStudent.set(f.student_id, group);
-  }
-  return [...byStudent.values()];
+/** A database row -> what the reminder screens need, including which parent(s) to message. */
+export function toOverdueGroup(row: OverdueStudentRow): OverdueGroup {
+  return {
+    studentId: row.student_id,
+    studentName: row.student_name,
+    parentName: row.parent_name,
+    phone: row.parent_whatsapp,
+    batchName: row.batch_name,
+    months: row.months,
+    total: Number(row.total),
+    latestFeeId: row.latest_fee_id,
+    recipients: messageRecipients(row),
+  };
 }
