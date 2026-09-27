@@ -47,8 +47,8 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
             </p>
 
             {/* Desktop: a peek at the app (skipped on short screens) */}
-            <div className="mt-10 hidden h-[360px] lg:block [@media(max-height:960px)]:mt-6 [@media(max-height:960px)]:h-[290px] [@media(max-height:780px)]:hidden">
-              <div className="origin-top-left [@media(max-height:960px)]:scale-[0.8]">
+            <div className="mt-10 hidden h-[600px] lg:block [@media(max-height:1000px)]:mt-6 [@media(max-height:1000px)]:h-[480px] [@media(max-height:860px)]:h-[396px] [@media(max-height:720px)]:hidden">
+              <div className="origin-top-left [@media(max-height:1000px)]:scale-[0.8] [@media(max-height:860px)]:scale-[0.66]">
                 <AppPreview />
               </div>
             </div>
