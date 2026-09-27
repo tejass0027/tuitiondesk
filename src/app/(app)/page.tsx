@@ -101,8 +101,8 @@ export default async function HomePage() {
               value={`${todaysBatches.filter((b) => b.done).length}/${todaysBatches.length}`}
               note="marked"
             />
-            <HeroStat label="Collected" value={formatINRShort(thisMonth.collected)} note={`${thisMonth.percent}% of month`} />
-            <HeroStat label="Overdue" value={String(overdue.length)} note={overdue.length === 1 ? "student" : "students"} />
+            <HeroStat label="Collected" value={formatINRShort(thisMonth.collected)} note={`${thisMonth.percent}% paid`} />
+            <HeroStat label="Overdue" value={String(overdueCount)} note={overdueCount === 1 ? "student" : "students"} />
           </dl>
         )}
       </header>

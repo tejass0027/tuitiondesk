@@ -14,8 +14,9 @@ const DESCRIPTIONS: Record<string, string> = {
   "/tests": "Enter test marks and share results",
   "/classes": "Class 1 to 12, JEE, NEET… your list",
   "/batches": "Timings and monthly fees",
+  "/holidays": "Festivals and breaks, no attendance",
   "/reminders": "Who was reminded and when",
-  "/settings": "Centre name, phone, fee due date",
+  "/settings": "Centre details, parent links, password",
 };
 
 export default async function MorePage() {
