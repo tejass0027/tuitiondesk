@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
+import { MessageCircle, Phone, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -136,37 +137,48 @@ export function StudentForm({ action, batches, classNames, student, defaultBatch
 
       <Separator className="my-1" />
 
-      <FormField label="Parent's name" htmlFor="parent_name" error={errors?.parent_name}>
-        <Input
-          id="parent_name"
-          name="parent_name"
-          autoComplete="off"
-          autoCapitalize="words"
-          placeholder="e.g. Rajesh Sharma"
-          defaultValue={typed?.parent_name ?? student?.parent_name}
-        />
-      </FormField>
+      <ParentFields
+        who="father"
+        title="Father"
+        name={typed?.father_name ?? student?.father_name}
+        phone={typed?.father_phone ?? (student?.father_phone ? formatPhone(student.father_phone) : undefined)}
+        errors={errors}
+      />
+      <ParentFields
+        who="mother"
+        title="Mother"
+        name={typed?.mother_name ?? student?.mother_name}
+        phone={typed?.mother_phone ?? (student?.mother_phone ? formatPhone(student.mother_phone) : undefined)}
+        errors={errors}
+      />
 
-      <FormField
-        label="Parent's WhatsApp number"
-        htmlFor="parent_whatsapp"
-        error={errors?.parent_whatsapp}
-        hint="Fee and absence reminders are sent here."
-      >
-        <Input
-          id="parent_whatsapp"
-          name="parent_whatsapp"
-          type="tel"
-          inputMode="tel"
-          autoComplete="off"
-          placeholder="98765 43210"
-          defaultValue={
-            typed?.parent_whatsapp ?? (student ? formatPhone(student.parent_whatsapp) : undefined)
-          }
-          aria-invalid={Boolean(errors?.parent_whatsapp)}
-          required
-        />
-      </FormField>
+      <fieldset className="grid gap-2">
+        <legend className="mb-2 text-base font-semibold">Send WhatsApp messages to</legend>
+        <div className="grid grid-cols-2 gap-2">
+          {(["father", "mother"] as const).map((who) => (
+            <label key={who} className="relative">
+              <input
+                type="radio"
+                name="contact_parent"
+                value={who}
+                defaultChecked={(typed?.contact_parent ?? student?.contact_parent ?? "father") === who}
+                className="peer sr-only"
+              />
+              <span className="flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-input bg-card text-base font-semibold text-muted-foreground transition-colors peer-checked:border-primary peer-checked:bg-accent peer-checked:text-accent-foreground peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50">
+                <MessageCircle className="size-5" aria-hidden />
+                {who === "father" ? "Father" : "Mother"}
+              </span>
+            </label>
+          ))}
+        </div>
+        {errors?.contact_parent ? (
+          <p className="text-sm font-medium text-danger" role="alert">
+            {errors.contact_parent[0]}
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground">Fee, absence and result messages go to this parent.</p>
+        )}
+      </fieldset>
 
       <SubmitButton pending={pending} className="mt-2">
         {submitLabel}
@@ -211,5 +223,61 @@ function ClassField({ classNames, current, error }: { classNames: string[]; curr
         Add or edit classes
       </Link>
     </FormField>
+  );
+}
+
+/** Name + phone for one parent, in a small card. Both are optional. */
+function ParentFields({
+  who,
+  title,
+  name,
+  phone,
+  errors,
+}: {
+  who: "father" | "mother";
+  title: string;
+  name?: string;
+  phone?: string;
+  errors?: Record<string, string[] | undefined>;
+}) {
+  return (
+    <fieldset className="grid gap-3 rounded-2xl bg-muted/50 p-4 ring-1 ring-foreground/5">
+      <legend className="sr-only">{title}</legend>
+      <p className="flex items-center gap-2 text-base font-bold" aria-hidden>
+        <span className="flex size-8 items-center justify-center rounded-lg bg-card text-primary shadow-sm">
+          <User className="size-4.5" />
+        </span>
+        {title}
+      </p>
+      <FormField label={`${title}'s name`} htmlFor={`${who}_name`} error={errors?.[`${who}_name`]}>
+        <Input
+          id={`${who}_name`}
+          name={`${who}_name`}
+          autoComplete="off"
+          autoCapitalize="words"
+          placeholder={who === "father" ? "e.g. Rajesh Sharma" : "e.g. Sunita Sharma"}
+          defaultValue={name}
+        />
+      </FormField>
+      <FormField label={`${title}'s phone (WhatsApp)`} htmlFor={`${who}_phone`} error={errors?.[`${who}_phone`]}>
+        <div className="relative">
+          <Phone
+            className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
+          <Input
+            id={`${who}_phone`}
+            name={`${who}_phone`}
+            type="tel"
+            inputMode="tel"
+            autoComplete="off"
+            placeholder="98765 43210"
+            defaultValue={phone}
+            aria-invalid={Boolean(errors?.[`${who}_phone`])}
+            className="pl-12"
+          />
+        </div>
+      </FormField>
+    </fieldset>
   );
 }

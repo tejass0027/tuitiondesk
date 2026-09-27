@@ -32,7 +32,9 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
   if (q) {
     // strip characters that have a meaning in PostgREST filters
     const safe = q.replace(/[,()*%\\]/g, " ");
-    query = query.or(`name.ilike.%${safe}%,parent_name.ilike.%${safe}%`);
+    query = query.or(
+      `name.ilike.%${safe}%,parent_name.ilike.%${safe}%,father_name.ilike.%${safe}%,mother_name.ilike.%${safe}%`,
+    );
   }
 
   const [{ data: students }, { data: batches }, { count: totalCount }, { data: classes }] = await Promise.all([

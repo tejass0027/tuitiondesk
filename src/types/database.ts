@@ -96,6 +96,11 @@ export type Database = {
           class: string;
           parent_name: string;
           parent_whatsapp: string;
+          father_name: string;
+          father_phone: string | null;
+          mother_name: string;
+          mother_phone: string | null;
+          contact_parent: "father" | "mother";
           joining_date: string;
           monthly_fee: number;
           is_active: boolean;
@@ -108,7 +113,12 @@ export type Database = {
           name: string;
           class?: string;
           parent_name?: string;
-          parent_whatsapp: string;
+          parent_whatsapp?: string;
+          father_name?: string;
+          father_phone?: string | null;
+          mother_name?: string;
+          mother_phone?: string | null;
+          contact_parent?: "father" | "mother";
           joining_date?: string;
           monthly_fee?: number;
           is_active?: boolean;
@@ -122,6 +132,11 @@ export type Database = {
           class?: string;
           parent_name?: string;
           parent_whatsapp?: string;
+          father_name?: string;
+          father_phone?: string | null;
+          mother_name?: string;
+          mother_phone?: string | null;
+          contact_parent?: "father" | "mother";
           joining_date?: string;
           monthly_fee?: number;
           is_active?: boolean;

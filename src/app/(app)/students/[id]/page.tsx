@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarCheck, FileText, IndianRupee, NotebookPen, Pencil, Phone, ReceiptIndianRupee } from "lucide-react";
+import { CalendarCheck, FileText, IndianRupee, MessageCircle, NotebookPen, Pencil, Phone, ReceiptIndianRupee } from "lucide-react";
 import { getCentre } from "@/lib/auth";
 import { formatDate, formatINR, formatMonth, todayIST } from "@/lib/format";
 import { isISOMonth, monthEnd } from "@/lib/calendar";
@@ -111,33 +111,55 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
         </div>
       </section>
 
-      {/* Parent contact */}
-      <section className="mt-4 rounded-2xl bg-card p-5 shadow-sm ring-1 ring-foreground/8">
-        <p className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Parent</p>
-        <p className="mt-1 text-lg font-semibold">{student.parent_name || "Not added"}</p>
-        <p className="text-base text-muted-foreground">{formatPhone(student.parent_whatsapp)}</p>
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <Button asChild variant="outline">
-            <a href={`tel:+${student.parent_whatsapp}`}>
-              <Phone aria-hidden /> Call
-            </a>
-          </Button>
-          <ReminderSheet
-            title="Message parent"
-            type="custom"
-            triggerLabel="WhatsApp"
-            triggerVariant="default"
-            triggerSize="default"
-            triggerClassName="bg-[#1f9d55] text-white hover:bg-[#1a8a4a]"
-            recipient={{
-              studentId: student.id,
-              studentName: student.name,
-              parentName: student.parent_name,
-              phone: student.parent_whatsapp,
-            }}
-            initialMessage={customMessageStart({ parentName: student.parent_name, centreName: centre.name })}
-          />
-        </div>
+      {/* Parents */}
+      <section className="mt-4 grid gap-3 rounded-2xl bg-card p-5 shadow-sm ring-1 ring-foreground/8">
+        <p className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Parents</p>
+        {(
+          [
+            { who: "father", title: "Father", name: student.father_name, phone: student.father_phone },
+            { who: "mother", title: "Mother", name: student.mother_name, phone: student.mother_phone },
+          ] as const
+        ).map((p) => {
+          const getsMessages = student.contact_parent === p.who;
+          return (
+            <div key={p.who} className="rounded-xl bg-muted/50 p-3">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <p className="text-sm font-semibold text-muted-foreground">{p.title}</p>
+                {getsMessages && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-xs font-semibold text-success">
+                    <MessageCircle className="size-3" aria-hidden /> Gets messages
+                  </span>
+                )}
+              </div>
+              <p className="text-lg font-semibold">{p.name || "Name not added"}</p>
+              <p className="text-base text-muted-foreground">{p.phone ? formatPhone(p.phone) : "No phone number"}</p>
+              {p.phone && (
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <Button asChild variant="outline">
+                    <a href={`tel:+${p.phone}`}>
+                      <Phone aria-hidden /> Call
+                    </a>
+                  </Button>
+                  <ReminderSheet
+                    title={`Message ${p.title.toLowerCase()}`}
+                    type="custom"
+                    triggerLabel="WhatsApp"
+                    triggerVariant="default"
+                    triggerSize="default"
+                    triggerClassName="bg-[#1f9d55] text-white hover:bg-[#1a8a4a]"
+                    recipient={{
+                      studentId: student.id,
+                      studentName: student.name,
+                      parentName: p.name,
+                      phone: p.phone,
+                    }}
+                    initialMessage={customMessageStart({ parentName: p.name, centreName: centre.name })}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
       </section>
 
       {/* Two quick numbers */}
