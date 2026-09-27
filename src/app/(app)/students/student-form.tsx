@@ -154,8 +154,8 @@ export function StudentForm({ action, batches, classNames, student, defaultBatch
 
       <fieldset className="grid gap-2">
         <legend className="mb-2 text-base font-semibold">Send WhatsApp messages to</legend>
-        <div className="grid grid-cols-2 gap-2">
-          {(["father", "mother"] as const).map((who) => (
+        <div className="grid grid-cols-3 gap-2">
+          {(["father", "mother", "both"] as const).map((who) => (
             <label key={who} className="relative">
               <input
                 type="radio"
@@ -166,7 +166,7 @@ export function StudentForm({ action, batches, classNames, student, defaultBatch
               />
               <span className="flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-input bg-card text-base font-semibold text-muted-foreground transition-colors peer-checked:border-primary peer-checked:bg-accent peer-checked:text-accent-foreground peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50">
                 <MessageCircle className="size-5" aria-hidden />
-                {who === "father" ? "Father" : "Mother"}
+                {who === "father" ? "Father" : who === "mother" ? "Mother" : "Both"}
               </span>
             </label>
           ))}
@@ -176,7 +176,9 @@ export function StudentForm({ action, batches, classNames, student, defaultBatch
             {errors.contact_parent[0]}
           </p>
         ) : (
-          <p className="text-sm text-muted-foreground">Fee, absence and result messages go to this parent.</p>
+          <p className="text-sm text-muted-foreground">
+            Fee, absence and result messages go to this parent. “Both” sends one message to each.
+          </p>
         )}
       </fieldset>
 

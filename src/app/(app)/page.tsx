@@ -52,7 +52,7 @@ export default async function HomePage() {
       .gte("month", `${months[0]}-01`),
     supabase
       .from("fee_overview")
-      .select("id, student_id, student_name, parent_name, parent_whatsapp, batch_name, month, balance")
+      .select("id, student_id, student_name, parent_name, parent_whatsapp, batch_name, month, balance, father_name, father_phone, mother_name, mother_phone, contact_parent")
       .eq("status", "overdue")
       .order("month"),
     supabase
@@ -222,19 +222,20 @@ export default async function HomePage() {
                         title="Fee reminder"
                         type="fee"
                         feeRecordId={o.latestFeeId}
-                        recipient={{
-                          studentId: o.studentId,
-                          studentName: o.studentName,
-                          parentName: o.parentName,
-                          phone: o.phone,
-                        }}
-                        initialMessage={feeReminderMessage({
-                          parentName: o.parentName,
-                          studentName: o.studentName,
-                          amount: o.total,
-                          months: o.months,
-                          centreName: centre.name,
-                        })}
+                        studentId={o.studentId}
+                        studentName={o.studentName}
+                        recipients={o.recipients.map((r) => ({
+                          label: r.label,
+                          parentName: r.name,
+                          phone: r.phone,
+                          message: feeReminderMessage({
+                            parentName: r.name,
+                            studentName: o.studentName,
+                            amount: o.total,
+                            months: o.months,
+                            centreName: centre.name,
+                          }),
+                        }))}
                       />
                     </li>
                   ))}

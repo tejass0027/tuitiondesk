@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { InitialsAvatar } from "@/components/shared/initials-avatar";
 import { ReminderSheet } from "@/components/reminders/reminder-sheet";
 import { absenceMessage } from "@/lib/whatsapp";
+import { messageRecipients, type ContactParent } from "@/lib/parents";
 import { cn } from "@/lib/utils";
 import { classLabel } from "@/lib/classes";
 import type { AttendanceStatus } from "@/types/database";
@@ -18,6 +19,11 @@ type SheetStudent = {
   class: string;
   parent_name: string;
   parent_whatsapp: string;
+  father_name: string;
+  father_phone: string | null;
+  mother_name: string;
+  mother_phone: string | null;
+  contact_parent: ContactParent;
 };
 
 type Props = {
@@ -159,20 +165,21 @@ export function AttendanceSheet({ batchId, batchName, centreName, today, date, s
                     title="Absence message"
                     type="absence"
                     triggerLabel="Send"
-                    recipient={{
-                      studentId: s.id,
-                      studentName: s.name,
-                      parentName: s.parent_name,
-                      phone: s.parent_whatsapp,
-                    }}
-                    initialMessage={absenceMessage({
-                      parentName: s.parent_name,
-                      studentName: s.name,
-                      date,
-                      today,
-                      batchName,
-                      centreName,
-                    })}
+                    studentId={s.id}
+                    studentName={s.name}
+                    recipients={messageRecipients(s).map((r) => ({
+                      label: r.label,
+                      parentName: r.name,
+                      phone: r.phone,
+                      message: absenceMessage({
+                        parentName: r.name,
+                        studentName: s.name,
+                        date,
+                        today,
+                        batchName,
+                        centreName,
+                      }),
+                    }))}
                   />
                 </li>
               ))}

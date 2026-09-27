@@ -120,7 +120,7 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
             { who: "mother", title: "Mother", name: student.mother_name, phone: student.mother_phone },
           ] as const
         ).map((p) => {
-          const getsMessages = student.contact_parent === p.who;
+          const getsMessages = student.contact_parent === p.who || (student.contact_parent === "both" && Boolean(p.phone));
           return (
             <div key={p.who} className="rounded-xl bg-muted/50 p-3">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -147,13 +147,15 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
                     triggerVariant="default"
                     triggerSize="default"
                     triggerClassName="bg-[#1f9d55] text-white hover:bg-[#1a8a4a]"
-                    recipient={{
-                      studentId: student.id,
-                      studentName: student.name,
-                      parentName: p.name,
-                      phone: p.phone,
-                    }}
-                    initialMessage={customMessageStart({ parentName: p.name, centreName: centre.name })}
+                    studentId={student.id}
+                    studentName={student.name}
+                    recipients={[
+                      {
+                        parentName: p.name,
+                        phone: p.phone,
+                        message: customMessageStart({ parentName: p.name, centreName: centre.name }),
+                      },
+                    ]}
                   />
                 </div>
               )}

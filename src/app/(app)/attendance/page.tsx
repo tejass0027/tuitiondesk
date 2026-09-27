@@ -58,7 +58,7 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
   const [{ data: students }, { data: marks }, { count: batchSize }] = await Promise.all([
     supabase
       .from("students")
-      .select("id, name, class, parent_name, parent_whatsapp")
+      .select("id, name, class, parent_name, parent_whatsapp, father_name, father_phone, mother_name, mother_phone, contact_parent")
       .eq("batch_id", batch.id)
       .eq("is_active", true)
       .lte("joining_date", date)

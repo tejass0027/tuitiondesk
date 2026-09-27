@@ -9,9 +9,20 @@ import { InitialsAvatar } from "@/components/shared/initials-avatar";
 import { ReminderSheet } from "@/components/reminders/reminder-sheet";
 import { formatMarks, parseMarksInput, percentOf, resultMessage, scoreBand, summarizeMarks } from "@/lib/marks";
 import { cn } from "@/lib/utils";
+import { messageRecipients, type ContactParent } from "@/lib/parents";
 import { saveMarks } from "../actions";
 
-type SheetStudent = { id: string; name: string; parent_name: string; parent_whatsapp: string };
+type SheetStudent = {
+  id: string;
+  name: string;
+  parent_name: string;
+  parent_whatsapp: string;
+  father_name: string;
+  father_phone: string | null;
+  mother_name: string;
+  mother_phone: string | null;
+  contact_parent: ContactParent;
+};
 type Saved = { marks: number | null; absent: boolean };
 type Row = { text: string; absent: boolean };
 
@@ -212,18 +223,24 @@ export function MarksSheet({ test, students, saved, centreName }: Props) {
                     title="Share result"
                     type="result"
                     triggerLabel="Send"
-                    recipient={{ studentId: s.id, studentName: s.name, parentName: s.parent_name, phone: s.parent_whatsapp }}
-                    initialMessage={resultMessage({
-                      parentName: s.parent_name,
-                      studentName: s.name,
-                      testName: test.name,
-                      subject: test.subject,
-                      testDate: test.test_date,
-                      marks,
-                      absent: saved.absent,
-                      maxMarks: max,
-                      centreName,
-                    })}
+                    studentId={s.id}
+                    studentName={s.name}
+                    recipients={messageRecipients(s).map((r) => ({
+                      label: r.label,
+                      parentName: r.name,
+                      phone: r.phone,
+                      message: resultMessage({
+                        parentName: r.name,
+                        studentName: s.name,
+                        testName: test.name,
+                        subject: test.subject,
+                        testDate: test.test_date,
+                        marks,
+                        absent: saved.absent,
+                        maxMarks: max,
+                        centreName,
+                      }),
+                    }))}
                   />
                 </li>
               );

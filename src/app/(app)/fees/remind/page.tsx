@@ -17,21 +17,23 @@ export default async function RemindAllPage() {
 
   const { data: overdue } = await supabase
     .from("fee_overview")
-    .select("id, student_id, student_name, parent_name, parent_whatsapp, batch_name, month, balance")
+    .select("id, student_id, student_name, parent_name, parent_whatsapp, batch_name, month, balance, father_name, father_phone, mother_name, mother_phone, contact_parent")
     .eq("status", "overdue")
     .order("student_name")
     .order("month");
 
-  // One message per student, even if several months are unpaid
+  // One entry per student; one ready message per parent who gets reminders
   const parents = groupOverdueByStudent(overdue ?? []).map((p) => ({
     ...p,
-    message: feeReminderMessage({
-      parentName: p.parentName,
-      studentName: p.studentName,
-      amount: p.total,
-      months: p.months,
-      centreName: centre.name,
-    }),
+    messages: p.recipients.map((r) =>
+      feeReminderMessage({
+        parentName: r.name,
+        studentName: p.studentName,
+        amount: p.total,
+        months: p.months,
+        centreName: centre.name,
+      }),
+    ),
   }));
 
   return (
@@ -39,7 +41,7 @@ export default async function RemindAllPage() {
       <PageHeader
         title="Remind overdue"
         backHref="/fees?tab=overdue"
-        description={parents.length ? `${parents.length} parents to remind, one at a time` : undefined}
+        description={parents.length ? `${parents.length} ${parents.length === 1 ? "student" : "students"} to remind, one at a time` : undefined}
       />
       {parents.length === 0 ? (
         <EmptyState

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { MessageCircle, Send } from "lucide-react";
+import { Check, MessageCircle, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -75,11 +75,25 @@ export function WhatsAppSendButton({
   );
 }
 
-/** Editable message preview in a bottom sheet, opened by a "Remind" style button. */
+/** One parent to message, with their own ready-made text. */
+export type SheetRecipient = {
+  /** "Father" / "Mother" when a student has both */
+  label?: string;
+  parentName: string;
+  phone: string;
+  message: string;
+};
+
+/**
+ * Editable message preview(s) in a bottom sheet, opened by a "Remind" style button.
+ * With two recipients (both parents) there is one message + one WhatsApp button each,
+ * because a WhatsApp link can only open one chat at a time.
+ */
 export function ReminderSheet({
-  recipient,
+  studentId,
+  studentName,
+  recipients,
   type,
-  initialMessage,
   feeRecordId,
   title,
   triggerLabel = "Remind",
@@ -87,9 +101,10 @@ export function ReminderSheet({
   triggerSize = "sm",
   triggerClassName,
 }: {
-  recipient: Recipient;
+  studentId: string;
+  studentName: string;
+  recipients: SheetRecipient[];
   type: ReminderType;
-  initialMessage: string;
   feeRecordId?: string | null;
   title: string;
   triggerLabel?: string;
@@ -98,14 +113,22 @@ export function ReminderSheet({
   triggerClassName?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState(initialMessage);
+  const [messages, setMessages] = useState(() => recipients.map((r) => r.message));
+  const [opened, setOpened] = useState<boolean[]>(() => recipients.map(() => false));
+  const several = recipients.length > 1;
+
+  if (recipients.length === 0) return null;
 
   return (
     <Sheet
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
-        if (next) setMessage(initialMessage); // start fresh each time
+        if (next) {
+          // start fresh each time
+          setMessages(recipients.map((r) => r.message));
+          setOpened(recipients.map(() => false));
+        }
       }}
     >
       <SheetTrigger asChild>
@@ -120,36 +143,52 @@ export function ReminderSheet({
         <SheetHeader className="px-0 pb-0">
           <SheetTitle className="text-2xl font-bold">{title}</SheetTitle>
           <SheetDescription className="text-base">
-            To {recipient.parentName || `${recipient.studentName}'s parent`} · {formatPhone(recipient.phone)}
+            {several
+              ? `Goes to both parents of ${studentName}. Send one, come back, then send the other.`
+              : `To ${recipients[0].parentName || `${studentName}'s parent`} · ${formatPhone(recipients[0].phone)}`}
           </SheetDescription>
         </SheetHeader>
 
-        <div className="grid gap-2 pt-2">
-          <label htmlFor="reminder-message" className="text-base font-semibold">
-            Message
-          </label>
-          <Textarea
-            id="reminder-message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            rows={5}
-            className="text-base leading-relaxed"
-          />
-          <p className="text-sm text-muted-foreground">
-            You can change the message. WhatsApp opens with it ready. Just tap Send there.
-          </p>
-        </div>
-
-        <WhatsAppSendButton
-          recipient={recipient}
-          type={type}
-          message={message}
-          feeRecordId={feeRecordId}
-          onOpened={() => {
-            toast.success("Opening WhatsApp… reminder logged");
-            setOpen(false);
-          }}
-        />
+        {recipients.map((r, i) => (
+          <div key={r.phone + i} className={cn("grid gap-2", several && "rounded-2xl bg-muted/50 p-3 ring-1 ring-foreground/5")}>
+            <label htmlFor={`reminder-message-${i}`} className="flex flex-wrap items-baseline justify-between gap-x-2 text-base font-semibold">
+              <span>{several ? `${r.label ?? "Parent"} · ${r.parentName || "Parent"}` : "Message"}</span>
+              {several && <span className="text-sm font-normal text-muted-foreground">{formatPhone(r.phone)}</span>}
+            </label>
+            <Textarea
+              id={`reminder-message-${i}`}
+              value={messages[i]}
+              onChange={(e) => setMessages((all) => all.map((m, j) => (j === i ? e.target.value : m)))}
+              rows={several ? 4 : 5}
+              className="text-base leading-relaxed"
+            />
+            <WhatsAppSendButton
+              recipient={{ studentId, studentName, parentName: r.parentName, phone: r.phone }}
+              type={type}
+              message={messages[i]}
+              feeRecordId={feeRecordId}
+              onOpened={() => {
+                const next = opened.map((o, j) => o || j === i);
+                setOpened(next);
+                toast.success(`Opening WhatsApp${several ? ` for ${r.label?.toLowerCase() ?? "parent"}` : ""}… logged`);
+                if (next.every(Boolean)) setOpen(false);
+              }}
+            >
+              {opened[i] ? (
+                <>
+                  <Check aria-hidden /> Opened · open again
+                </>
+              ) : several ? (
+                `Open WhatsApp · ${r.label ?? "Parent"}`
+              ) : (
+                "Open WhatsApp"
+              )}
+            </WhatsAppSendButton>
+          </div>
+        ))}
+        <p className="text-sm text-muted-foreground">
+          You can change the message. WhatsApp opens with it ready. Just tap Send there.
+        </p>
       </SheetContent>
     </Sheet>
   );

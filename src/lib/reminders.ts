@@ -1,9 +1,16 @@
+import { messageRecipients, type ContactParent, type MessageRecipient } from "@/lib/parents";
+
 type OverdueFee = {
   id: string;
   student_id: string;
   student_name: string;
   parent_name: string;
   parent_whatsapp: string;
+  father_name: string;
+  father_phone: string | null;
+  mother_name: string;
+  mother_phone: string | null;
+  contact_parent: ContactParent;
   batch_name: string | null;
   month: string;
   balance: number;
@@ -19,6 +26,8 @@ export type OverdueGroup = {
   total: number;
   /** newest unpaid fee, used to link the reminder log entry */
   latestFeeId: string;
+  /** father, mother or both, depending on the student's setting */
+  recipients: MessageRecipient[];
 };
 
 /**
@@ -38,6 +47,7 @@ export function groupOverdueByStudent(fees: OverdueFee[]): OverdueGroup[] {
       months: [],
       total: 0,
       latestFeeId: f.id,
+      recipients: messageRecipients(f),
     };
     const isNewest = group.months.every((m) => f.month >= m);
     group.months.push(f.month);

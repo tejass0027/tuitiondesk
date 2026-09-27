@@ -25,7 +25,7 @@ export default async function TestMarksPage({ params }: PageProps<"/tests/[id]">
   // Students in the batch, plus anyone who already has marks here (e.g. moved batch since)
   const { data: students } = await supabase
     .from("students")
-    .select("id, name, parent_name, parent_whatsapp, is_active, batch_id")
+    .select("id, name, parent_name, parent_whatsapp, is_active, batch_id, father_name, father_phone, mother_name, mother_phone, contact_parent")
     .or(
       markedIds.size
         ? `batch_id.eq.${test.batch_id},id.in.(${[...markedIds].join(",")})`

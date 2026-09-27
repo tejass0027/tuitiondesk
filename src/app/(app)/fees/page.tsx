@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import type { FeeOverview } from "@/types/database";
 import { ReminderSheet } from "@/components/reminders/reminder-sheet";
 import { feeReminderMessage } from "@/lib/whatsapp";
+import { messageRecipients } from "@/lib/parents";
 import { PaymentSheet } from "./payment-sheet";
 import { ClassFilter } from "@/components/shared/class-filter";
 
@@ -311,19 +312,20 @@ function FeeRow({
               title="Fee reminder"
               type="fee"
               feeRecordId={fee.id}
-              recipient={{
-                studentId: fee.student_id,
-                studentName: fee.student_name,
-                parentName: fee.parent_name,
-                phone: fee.parent_whatsapp,
-              }}
-              initialMessage={feeReminderMessage({
-                parentName: fee.parent_name,
-                studentName: fee.student_name,
-                amount: Number(fee.balance),
-                months: [fee.month],
-                centreName,
-              })}
+              studentId={fee.student_id}
+              studentName={fee.student_name}
+              recipients={messageRecipients(fee).map((r) => ({
+                label: r.label,
+                parentName: r.name,
+                phone: r.phone,
+                message: feeReminderMessage({
+                  parentName: r.name,
+                  studentName: fee.student_name,
+                  amount: Number(fee.balance),
+                  months: [fee.month],
+                  centreName,
+                }),
+              }))}
             />
             <PaymentSheet fee={fee} triggerLabel="Add payment" />
           </div>

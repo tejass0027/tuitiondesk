@@ -100,7 +100,7 @@ export type Database = {
           father_phone: string | null;
           mother_name: string;
           mother_phone: string | null;
-          contact_parent: "father" | "mother";
+          contact_parent: "father" | "mother" | "both";
           joining_date: string;
           monthly_fee: number;
           is_active: boolean;
@@ -118,7 +118,7 @@ export type Database = {
           father_phone?: string | null;
           mother_name?: string;
           mother_phone?: string | null;
-          contact_parent?: "father" | "mother";
+          contact_parent?: "father" | "mother" | "both";
           joining_date?: string;
           monthly_fee?: number;
           is_active?: boolean;
@@ -136,7 +136,7 @@ export type Database = {
           father_phone?: string | null;
           mother_name?: string;
           mother_phone?: string | null;
-          contact_parent?: "father" | "mother";
+          contact_parent?: "father" | "mother" | "both";
           joining_date?: string;
           monthly_fee?: number;
           is_active?: boolean;
@@ -434,6 +434,11 @@ export type Database = {
           balance: number;
           last_paid_on: string | null;
           status: FeeStatus;
+          father_name: string;
+          father_phone: string | null;
+          mother_name: string;
+          mother_phone: string | null;
+          contact_parent: "father" | "mother" | "both";
         };
         Relationships: [];
       };

@@ -23,7 +23,7 @@ const studentSchema = z
     father_phone: optionalPhone,
     mother_name: z.string().trim().max(120),
     mother_phone: optionalPhone,
-    contact_parent: z.enum(["father", "mother"]),
+    contact_parent: z.enum(["father", "mother", "both"]),
     joining_date: z.iso.date("Pick the joining date"),
     monthly_fee: z
       .number("Enter the monthly fee")
@@ -31,10 +31,18 @@ const studentSchema = z
       .max(10_00_000, "That fee looks too large"),
   })
   // The parent who gets WhatsApp messages must have a phone number
-  .refine((s) => (s.contact_parent === "mother" ? s.mother_phone : s.father_phone), {
-    path: ["contact_parent"],
-    message: "Add a phone number for the parent who gets messages",
-  });
+  .refine(
+    (s) =>
+      s.contact_parent === "both"
+        ? s.father_phone && s.mother_phone
+        : s.contact_parent === "mother"
+          ? s.mother_phone
+          : s.father_phone,
+    {
+      path: ["contact_parent"],
+      message: "Add a phone number for every parent who gets messages",
+    },
+  );
 
 function parseStudent(formData: FormData) {
   return studentSchema.safeParse({
