@@ -39,7 +39,7 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
   const { supabase, centre } = await getCentre();
   await supabase.rpc("generate_monthly_fees"); // make sure this month's fee exists
 
-  const [{ data: student }, { data: stats }, { data: fees }, { data: monthMarks }, { data: testMarks }] = await Promise.all([
+  const [{ data: student }, { data: stats }, { data: fees }, { data: monthMarks }, { data: testMarks }, { data: monthHolidays }] = await Promise.all([
     supabase.from("students").select("*, batches(name)").eq("id", id).maybeSingle(),
     supabase.from("student_attendance_stats").select("*").eq("student_id", id).maybeSingle(),
     supabase.from("fee_overview").select("*").eq("student_id", id).order("month", { ascending: false }),
@@ -53,6 +53,7 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
       .from("test_marks")
       .select("marks, absent, tests(id, name, subject, test_date, max_marks)")
       .eq("student_id", id),
+    supabase.from("holidays").select("date, name").gte("date", `${month}-01`).lte("date", monthEnd(month)),
   ]);
 
   // Newest test first; average % over the tests the student actually wrote
@@ -202,6 +203,7 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
           month={month}
           today={today}
           marks={Object.fromEntries((monthMarks ?? []).map((m) => [m.date, m.status]))}
+          holidays={Object.fromEntries((monthHolidays ?? []).map((h) => [h.date, h.name]))}
           hrefForMonth={(m) => `/students/${id}?month=${m}`}
         />
       </section>

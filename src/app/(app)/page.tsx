@@ -42,6 +42,7 @@ export default async function HomePage() {
     { data: fees },
     { data: overdueRows },
     { data: stats },
+    { data: holiday },
   ] = await Promise.all([
     supabase.from("batches").select("id, name, days, start_time, end_time").eq("is_active", true).order("start_time", { nullsFirst: false }),
     supabase.from("students").select("id, batch_id").eq("is_active", true).lte("joining_date", today),
@@ -59,6 +60,7 @@ export default async function HomePage() {
       .from("student_attendance_stats")
       .select("student_id, student_name, recent_total, recent_present")
       .eq("is_active", true),
+    supabase.from("holidays").select("name").eq("date", today).maybeSingle(),
   ]);
 
   const hasBatches = Boolean(batches?.length);
@@ -66,7 +68,7 @@ export default async function HomePage() {
 
   // Today's batches + whether attendance is done
   const todaysBatches = (batches ?? [])
-    .filter((b) => b.days.includes(dayKey))
+    .filter((b) => !holiday && b.days.includes(dayKey))
     .map((b) => {
       const size = (activeStudents ?? []).filter((s) => s.batch_id === b.id).length;
       const marked = new Set((todaysMarks ?? []).filter((m) => m.batch_id === b.id).map((m) => m.student_id)).size;
@@ -128,7 +130,11 @@ export default async function HomePage() {
         <>
           {/* 1. Today's batches */}
           <Card title="Today's batches" icon={CalendarCheck} href="/attendance" linkLabel="Attendance">
-            {todaysBatches.length === 0 ? (
+            {holiday ? (
+              <p className="flex items-center gap-2 rounded-xl bg-warning-soft p-3 text-base font-medium text-warning">
+                <PartyPopper className="size-5 shrink-0" aria-hidden /> {holiday.name || "Holiday"} today. The centre is closed, enjoy the break!
+              </p>
+            ) : todaysBatches.length === 0 ? (
               <p className="flex items-center gap-2 text-base text-muted-foreground">
                 <CalendarClock className="size-5" aria-hidden /> No batches meet on {weekday}. Enjoy the day!
               </p>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Check, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, PartyPopper, X } from "lucide-react";
 import { addMonths, monthGrid } from "@/lib/calendar";
 import { formatMonth } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -9,19 +9,22 @@ type Props = {
   month: string; // "yyyy-MM"
   marks: Record<string, AttendanceStatus>; // "yyyy-MM-dd" -> status
   today: string;
+  /** "yyyy-MM-dd" -> holiday name */
+  holidays?: Record<string, string>;
   /** builds the link for another month, e.g. m => `/students/1?month=${m}` */
   hrefForMonth: (month: string) => string;
 };
 
 const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"];
 
-/** Month view: ✓ green = present, ✕ red = absent, plain = not marked. */
-export function AttendanceCalendar({ month, marks, today, hrefForMonth }: Props) {
+/** Month view: ✓ green = present, ✕ red = absent, 🎉 amber = holiday, plain = not marked. */
+export function AttendanceCalendar({ month, marks, today, holidays = {}, hrefForMonth }: Props) {
   const weeks = monthGrid(month);
   const values = Object.entries(marks).filter(([d]) => d.startsWith(month));
   const present = values.filter(([, s]) => s === "present").length;
   const absent = values.length - present;
   const canGoForward = month < today.slice(0, 7);
+  const holidayCount = Object.keys(holidays).filter((d) => d.startsWith(month)).length;
 
   const nav =
     "flex size-11 items-center justify-center rounded-xl text-foreground transition-colors hover:bg-muted";
@@ -60,16 +63,18 @@ export function AttendanceCalendar({ month, marks, today, hrefForMonth }: Props)
               {week.map((day, di) => {
                 if (!day) return <td key={di} />;
                 const status = marks[day];
+                const holiday = !status ? holidays[day] : undefined;
                 const dayNum = Number(day.slice(8));
                 return (
                   <td key={di} className="p-0">
                     <div
-                      title={status ? `${dayNum}: ${status}` : undefined}
+                      title={status ? `${dayNum}: ${status}` : holiday !== undefined ? `${dayNum}: ${holiday || "Holiday"}` : undefined}
                       className={cn(
                         "mx-auto flex aspect-square max-w-12 flex-col items-center justify-center rounded-xl text-[0.95rem] font-semibold",
                         status === "present" && "bg-success-soft text-success",
                         status === "absent" && "bg-danger-soft text-danger",
-                        !status && "text-muted-foreground",
+                        holiday !== undefined && "bg-warning-soft text-warning",
+                        !status && holiday === undefined && "text-muted-foreground",
                         day === today && "ring-2 ring-primary",
                         day > today && "opacity-40",
                       )}
@@ -77,6 +82,7 @@ export function AttendanceCalendar({ month, marks, today, hrefForMonth }: Props)
                       <span className="leading-none">{dayNum}</span>
                       {status === "present" && <Check className="mt-0.5 size-3.5" aria-label="present" />}
                       {status === "absent" && <X className="mt-0.5 size-3.5" aria-label="absent" />}
+                      {holiday !== undefined && <PartyPopper className="mt-0.5 size-3.5" aria-label={holiday || "holiday"} />}
                     </div>
                   </td>
                 );
@@ -93,6 +99,11 @@ export function AttendanceCalendar({ month, marks, today, hrefForMonth }: Props)
         <span className="inline-flex items-center gap-1.5 font-semibold text-danger">
           <X className="size-4" aria-hidden /> {absent} absent
         </span>
+        {holidayCount > 0 && (
+          <span className="inline-flex items-center gap-1.5 font-semibold text-warning">
+            <PartyPopper className="size-4" aria-hidden /> {holidayCount} {holidayCount === 1 ? "holiday" : "holidays"}
+          </span>
+        )}
         {values.length === 0 && <span className="text-muted-foreground">No attendance marked this month</span>}
       </div>
     </div>

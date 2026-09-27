@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarCheck, Layers, Plus, UserPlus } from "lucide-react";
+import { CalendarCheck, Layers, PartyPopper, Plus, UserPlus } from "lucide-react";
 import { getCentre } from "@/lib/auth";
 import { signPhotoUrls } from "@/lib/photos";
 import { dayKeyOf, formatTimeRange } from "@/lib/batches";
@@ -56,7 +56,7 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
   const requested = typeof params.batch === "string" ? params.batch : "";
   const batch = ordered.find((b) => b.id === requested) ?? ordered[0];
 
-  const [{ data: students }, { data: marks }, { count: batchSize }] = await Promise.all([
+  const [{ data: students }, { data: marks }, { count: batchSize }, { data: holiday }] = await Promise.all([
     supabase
       .from("students")
       .select("id, name, class, parent_name, parent_whatsapp, father_name, father_phone, mother_name, mother_phone, contact_parent, photo_path")
@@ -70,7 +70,11 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
       .select("id", { count: "exact", head: true })
       .eq("batch_id", batch.id)
       .eq("is_active", true),
+    supabase.from("holidays").select("name").eq("date", date).maybeSingle(),
   ]);
+  // On a holiday the sheet stays hidden unless the owner chooses "Mark anyway" (e.g. an extra class)
+  const markAnyway = params.mark === "1";
+  const closed = Boolean(holiday) && !markAnyway && !(marks ?? []).length;
 
   const photos = await signPhotoUrls(supabase, (students ?? []).map((s) => s.photo_path));
   const saved: Record<string, AttendanceStatus> = Object.fromEntries(
@@ -125,14 +129,34 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
           })}
         </nav>
 
-        {!isScheduled && (
+        {holiday && !closed && (
+          <p className="rounded-xl bg-warning-soft px-4 py-3 text-[0.95rem] font-medium text-warning">
+            <PartyPopper className="mr-1.5 inline size-4 align-[-2px]" aria-hidden />
+            {holiday.name || "Holiday"}: the centre is closed today. Marking anyway.
+          </p>
+        )}
+
+        {!closed && !isScheduled && (
           <p className="rounded-xl bg-muted px-4 py-3 text-[0.95rem] text-muted-foreground">
             <CalendarCheck className="mr-1.5 inline size-4 align-[-2px]" aria-hidden />
             {batch.name} doesn’t normally meet on this day. You can still mark it if there was an extra class.
           </p>
         )}
 
-        {!students?.length && batchSize ? (
+        {closed ? (
+          <EmptyState
+            icon={PartyPopper}
+            title={`${holiday!.name || "Holiday"} – centre closed`}
+            description="No attendance is needed today, so nobody is marked absent. Had an extra class anyway?"
+            action={
+              <Button asChild variant="outline" size="lg">
+                <Link href={`/attendance?batch=${batch.id}&date=${date}&mark=1`} replace scroll={false}>
+                  <CalendarCheck aria-hidden /> Mark attendance anyway
+                </Link>
+              </Button>
+            }
+          />
+        ) : !students?.length && batchSize ? (
           <EmptyState
             icon={CalendarCheck}
             title="Nobody had joined yet"

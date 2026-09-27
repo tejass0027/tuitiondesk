@@ -7,6 +7,7 @@ import {
   Layers,
   MessageCircle,
   NotebookPen,
+  PartyPopper,
   Settings,
   Users,
   type LucideIcon,
@@ -28,6 +29,7 @@ export const SECONDARY_NAV: NavItem[] = [
   { href: "/tests", label: "Tests & marks", icon: NotebookPen },
   { href: "/classes", label: "Classes", icon: GraduationCap },
   { href: "/batches", label: "Batches", icon: Layers },
+  { href: "/holidays", label: "Holidays", icon: PartyPopper },
   { href: "/reminders", label: "Reminder log", icon: MessageCircle },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
