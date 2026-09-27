@@ -1,218 +1,149 @@
 # TuitionDesk
 
-**Attendance, fees and WhatsApp parent reminders for small tuition and coaching centres, built for the phone.**
+**Attendance, fees and WhatsApp reminders for tuition and coaching centres, made for the phone.**
 
-Most small coaching centres in India still run on notebooks: one for attendance, one for fees, and a lot of memory for "who hasn't paid yet?". TuitionDesk replaces those notebooks with a simple, friendly web app that a centre owner can use comfortably on a phone.
+Most small tuition centres still run on notebooks: one for attendance, one for fees, and a lot of memory for "who hasn't paid yet?". TuitionDesk replaces those notebooks with one simple app that works on any phone or computer, with nothing to install.
 
-- **Mark a whole batch in seconds.** Everyone starts as Present; tap only the absent ones and press Save.
-- **Know who has paid.** Monthly fees are created automatically. Record cash, UPI or bank payments, including part payments.
-- **Record test marks.** Type a whole class's marks on one screen and share each result with parents.
-- **Report cards as PDF.** One tap builds a printable progress report (attendance + marks) to share on WhatsApp.
-- **Remind parents on WhatsApp for free.** Pre-filled messages open in WhatsApp with one tap. No paid API needed.
-- **See everything at a glance.** Today's batches, collections vs pending, overdue fees and low attendance on one home screen.
-
-Parents don't need an account. They simply receive WhatsApp messages from the owner.
+Parents don't need an account. They get WhatsApp messages from the centre, and can optionally open a private page to see their child's progress.
 
 ---
 
-## Screenshots
+## What it does
 
-> Add your own screenshots to `docs/screenshots/` and they will show up here.
-> Tip: in Chrome DevTools switch to a phone size (e.g. iPhone 12 Pro), then use **⋮ → Capture screenshot**.
+### 📋 Attendance in seconds
+- Pick a batch and everyone starts as **Present**. Tap only the students who are absent, then press Save.
+- Send the parents of absent students a WhatsApp message with one tap.
+- Each student has a monthly attendance calendar.
 
-| Home | Attendance | Fees | Student |
-|---|---|---|---|
-| ![Home](docs/screenshots/home.png) | ![Attendance](docs/screenshots/attendance.png) | ![Fees](docs/screenshots/fees.png) | ![Student profile](docs/screenshots/student.png) |
+### ₹ Fees made easy
+- Every student's fee is added automatically each month.
+- Record cash, UPI or bank payments, including part payments. **Undo** a mistake straight away.
+- See **Due**, **Overdue** and **Paid** at a glance, with how much has been collected and how much is pending.
+- A **PDF receipt** for every payment, with a receipt number and the amount in words, ready to share on WhatsApp.
 
----
+### 💬 WhatsApp reminders (free)
+- Fee reminders, absence messages and test results open in WhatsApp **with the message already typed**. You just tap Send.
+- Choose who gets messages: **father, mother or both**.
+- **Remind all overdue** walks you through every parent who owes fees, one by one.
+- A **reminder log** shows who was reminded and when, so nobody gets reminded twice by mistake.
 
-## Features
+### 📝 Tests and report cards
+- Create a test and type the whole class's marks on one screen. You can mark students absent, and the class average updates as you type.
+- Share each student's result with their parents.
+- **Report card PDF** with attendance and marks for this month, the last 3 months, the whole year or any dates you choose.
 
-| Area | What you can do |
-|---|---|
-| **Sign up & centre** | Sign up with email + password, centre name, phone and address. "Forgot password?" emails a reset link; you can also change your password in Settings. Each owner only ever sees their own centre (enforced by Postgres row-level security). |
-| **Classes** | Set up your class list once, rename or remove classes, then pick a class when adding students and filter the student list and fees by class. |
-| **Batches** | Create batches like "Class 10 Maths – Evening" with days, timings and a monthly fee. Archive old batches without losing history. |
-| **Students** | Add students with class, batch and both parents' names and phones (choose Father, Mother or Both to get messages). The fee is filled in from the batch and can be lowered for discounts. Search by student or parent name, filter by batch or class. |
-| **Import from Excel** | Add a whole register at once from an Excel (.xlsx) or CSV file, or by pasting cells. Common headings are recognised ("Student Name", "Mobile No.", "Std"…), every row is checked before saving, and students already added are skipped. A template is included. |
-| **Student photos** | Tap the avatar to take or choose a photo. It's cropped to a small square in the browser and stored in a **private** Supabase Storage bucket, shown with short-lived signed URLs. |
-| **Student profile** | Parent contact (call / WhatsApp), attendance %, a monthly attendance calendar, and full fee + payment history. |
-| **Attendance** | Pick a date and batch → everyone is Present → tap to mark Absent → one Save. Today's batches are shown first. Saving again updates the same day. |
-| **Fees** | A "due" entry is created every month for every active student. Due / Overdue / Paid tabs, collected vs pending totals, part payments, Undo, and a fee due day you can set. |
-| **Fee receipts** | Every payment has a PDF receipt (receipt number, amount in words, balance left). Share it to WhatsApp straight after recording the payment, or later from the student's fee history. |
-| **Holidays** | Add festivals or whole breaks. The attendance page says the centre is closed (with "Mark anyway" for extra classes), Home skips the day, and calendars show it. |
-| **Parent link** | A private, read-only page per student with attendance calendar, marks and fees. Parents open it from WhatsApp with no login; the owner can turn it off at any time. |
-| **Tests & marks** | Create a test for a batch (name, subject, date, out of). Type every student's marks on one screen (Next jumps to the next student), mark absentees, see the class average live, then share each result with parents on WhatsApp. Marks history and average % on the student profile. |
-| **Report card PDF** | From a student's profile: pick this month, last 3 months, the academic year (Apr–Mar) or any dates, then Share (attaches the PDF to WhatsApp on phones), Download or View. Includes attendance by month, every test with % and a performance word, subject-wise averages and signature lines. |
-| **Reminders** | Fee, absence and custom WhatsApp messages from editable templates. "Remind all overdue" goes through parents one by one. Every reminder is logged. |
-| **Dashboard** | Today's batches (marked or not), this month's collections with a 6-month chart, overdue students with quick Remind, and students below 75% attendance. |
-| **Design** | Mobile-first with a bottom tab bar, big tap targets and 17px base text. Light & dark mode, ₹ with Indian digit grouping (₹1,00,000), dates as `25 Sep 2026`, loading skeletons, toasts after every save, friendly empty states. Status is always colour **and** icon **and** label. |
+### 👨‍👩‍👧 Students
+- Add students one by one with both parents' names and phone numbers.
+- **Import a whole register from Excel** (or paste it straight from Excel). Every row is checked before anything is saved, and students already added are skipped.
+- Add a **photo** of each student, so you can recognise them on the attendance sheet.
+- Search by student or parent name, and filter by class or batch.
 
----
+### 🔗 Parent link (optional)
+- Give parents a private page with their child's attendance, marks and fees. They don't need to log in or install anything.
+- Switch the feature on or off for the whole centre in **Settings**, and turn off any single link at any time.
 
-## Tech stack
+### 🗓 Holidays, classes and batches
+- Add festivals and breaks (a single day or a whole range). Attendance isn't taken on holidays.
+- Keep a list of your classes (Class 1–12, JEE, NEET…) and your batches with their days, timings and fees.
 
-- **[Next.js 16](https://nextjs.org/)** (App Router, Server Components, Server Actions, `proxy.ts`) with **TypeScript**
-- **[Supabase](https://supabase.com/)**: Postgres database, email/password auth, row-level security (via `@supabase/ssr`)
-- **[Tailwind CSS v4](https://tailwindcss.com/)** + **[shadcn/ui](https://ui.shadcn.com/)** (Radix) components
-- **[lucide-react](https://lucide.dev/)** icons, **[Recharts](https://recharts.org/)** for the fee chart
-- **[@react-pdf/renderer](https://react-pdf.org/)** to build report card PDFs on the server
-- **zod** for validation, **date-fns** for dates, **sonner** for toasts, **next-themes** for dark mode
-- **Vitest** for unit tests
-- Ready to deploy on **[Vercel](https://vercel.com/)**
+### 🏠 Home screen
+- Today's batches (marked or not), this month's fee collection with a 6-month chart, students with overdue fees, and students whose attendance is below 75%.
 
----
-
-## How it works (architecture in one minute)
-
-```
-Phone browser
-   │  taps a button / submits a form
-   ▼
-Next.js on Vercel
-   ├─ proxy.ts ............ refreshes the login cookie, sends signed-out users to /login
-   ├─ Server Components ... read data (e.g. the fees page queries the fee_overview view)
-   └─ Server Actions ...... validate input with zod, then write to the database
-   │  every query runs *as the logged-in owner*
-   ▼
-Supabase Postgres
-   ├─ Row-level security .. only rows whose centre_id belongs to this owner
-   ├─ generate_monthly_fees()  creates missing monthly fee entries (safe to run many times)
-   └─ fee_overview view ...... works out paid / balance / status (due, overdue, paid) live
-```
-
-**Key design decisions**
-
-- **Security lives in the database.** Every table has a `centre_id`, and RLS policies check it. Even a buggy query can't read another centre's data. Composite foreign keys `(id, centre_id)` also stop a row from pointing at another centre's student or batch.
-- **Fee status is computed, not stored.** The `fee_overview` view adds up payments and compares the due date with today (in IST). A fee turns "overdue" by itself: no cron job, and no status column that can go stale.
-- **Monthly fees without a cron job.** `generate_monthly_fees()` is *idempotent*: a unique `(student_id, month)` key means calling it on every page load only ever creates the missing rows.
-- **Attendance is one request.** Toggling happens in the browser for instant feedback. Save sends the whole batch as a single **upsert** on the unique `(student_id, batch_id, date)` key, so re-saving a day updates it instead of duplicating it.
-- **Parent link without accounts.** Each student can get a random 32-character token. Anonymous visitors can't read any table; they can only call `parent_view(token)`, which returns just that one student's summary. Clearing the token turns the link off instantly.
-- **Built for 1,000+ students.** The API returns at most 1,000 rows per request, so nothing adds up rows in the app: totals come from SQL functions, long lists load 50 at a time ("Show more"), `.in()` lookups go in chunks of 100, and the few screens that need everything page through it 1,000 rows at a time.
-- **WhatsApp via `wa.me` links.** Free, no approval needed. The message is pre-filled and the owner just taps Send. Because the app can't see inside WhatsApp, the log records "reminder opened".
+### Also
+- Works on phones and computers, in light and dark mode.
+- Indian formats everywhere: ₹1,00,000 and dates like 25 Sep 2026.
+- Handles large centres with **1,000+ students**.
+- Each centre can only ever see its own data.
+- Forgot your password? Reset it by email.
 
 ---
 
-## Database
+## How to get it running
 
-Migrations live in [`supabase/migrations`](supabase/migrations):
+You'll need:
+- A free **[Supabase](https://supabase.com/)** account. It stores your data and handles logins.
+- **[Node.js](https://nodejs.org/)** version 20 or newer, installed on your computer.
+- For putting it online: a free **[Vercel](https://vercel.com/)** account and a **GitHub** account.
 
-| File | Contents |
-|---|---|
-| `…_tables.sql` | `centres`, `batches`, `students`, `attendance`, `fee_records`, `payments`, `reminder_logs`: foreign keys, checks and indexes |
-| `…_rls.sql` | Row-level security on every table + the `my_centre_id()` helper |
-| `…_functions.sql` | Signup trigger (creates the centre), `generate_monthly_fees()`, `today_ist()`, and the `fee_overview` and `student_attendance_stats` views |
-| `…_classes.sql` | The centre's class list, with RLS and a `rename_class()` function that renames a class on every student too |
-| `…_tests_and_marks.sql` | `tests` and `test_marks` with RLS, plus triggers that stop marks going above a test's maximum |
-| `…_both_parents.sql`, `…_message_both_parents.sql` | Father and mother details, and who gets WhatsApp messages (father / mother / both) |
-| `…_photos_holidays_parent_links.sql` | Private `student-photos` storage bucket with per-centre folder policies, the `holidays` table, and `parent_view(token)`: a security-definer function that returns one student's data for a valid parent link |
-| `…_scale_totals.sql` | Totals counted inside Postgres (`fee_month_totals`, `overdue_totals`, `overdue_students`, `batch_day_counts`, `class_counts`, `low_attendance`), so Home and Fees stay correct past the API's 1,000-rows-per-request limit |
+### Step 1: Download the app
 
-```
-centres ─┬─< batches ─┬─< students ─┬─< attendance
-         │            │             ├─< fee_records ─< payments
-         │            │             ├─< reminder_logs
-         │            └─< tests ──────┴─< test_marks
-```
-
----
-
-## Getting started
-
-### 1. Prerequisites
-
-- Node.js **20.9+** (22 recommended) and npm
-- A free [Supabase](https://supabase.com/) account
-
-### 2. Clone and install
+Open a terminal and run:
 
 ```bash
-git clone https://github.com/<your-username>/tuitiondesk.git
+git clone https://github.com/tejass0027/tuitiondesk.git
 cd tuitiondesk
 npm install
 ```
 
-### 3. Create the Supabase project and database
+### Step 2: Set up the database in Supabase
 
-1. Create a new project at [supabase.com](https://supabase.com/dashboard).
-2. Open **SQL Editor** and run every file in `supabase/migrations/` **in order** (tables → rls → functions → tests_and_marks → classes).
-   *(Or with the Supabase CLI: `npx supabase link` then `npx supabase db push`.)*
-3. For local testing you can turn off **Authentication → Sign In / Providers → Email → Confirm email**, so new sign-ups are logged in immediately. Turn it back on for production.
+1. Go to [supabase.com/dashboard](https://supabase.com/dashboard) and create a **new project**. Choose the Mumbai region if you're in India.
+2. Open **SQL Editor** from the left menu.
+3. Open each file in the `supabase/migrations` folder **in this order**. Copy the whole file, paste it into the SQL Editor, and click **Run**:
+   1. `…_tables.sql`
+   2. `…_rls.sql`
+   3. `…_functions.sql`
+   4. `…_tests_and_marks.sql`
+   5. `…_classes.sql`
+   6. `…_both_parents.sql`
+   7. `…_message_both_parents.sql`
+   8. `…_photos_holidays_parent_links.sql`
+   9. `…_scale_totals.sql`
 
-### 4. Environment variables
+   Each should say **"Success. No rows returned."**
+4. Go to **Authentication → URL Configuration**:
+   - **Site URL:** `http://localhost:3000`
+   - **Redirect URLs:** add `http://localhost:3000/**`
+5. Optional, for quick testing: in **Authentication → Sign In / Providers → Email**, turn off **Confirm email**, so new sign-ups can log in straight away.
 
-```bash
-cp .env.example .env.local
-```
+### Step 3: Connect the app to your database
 
-Fill in the values from **Project Settings → API Keys / Data API**:
+1. In Supabase, go to **Project Settings → API Keys** (and **Data API** for the URL).
+2. In the app folder, make a copy of `.env.example` and name it `.env.local`.
+3. Open `.env.local` and paste in your two values:
 
-| Variable | Where to find it |
-|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Project URL, e.g. `https://abcd.supabase.co` |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | The publishable key (`sb_publishable_…`) or the legacy `anon` key |
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+   ```
 
-> Only the **publishable/anon** key goes in this app. It is safe in the browser because RLS protects the data.
-> **Never** put the `service_role` / secret key in a `NEXT_PUBLIC_` variable or commit it. `.env.local` is git-ignored.
+   Only use the **publishable** key here, never the secret key. `.env.local` stays on your computer and is never uploaded.
 
-### 5. Run it
+### Step 4: Start it
 
 ```bash
 npm run dev
 ```
 
-Open http://localhost:3000, create your centre, then follow the three-step checklist on the home screen.
+Open **http://localhost:3000**, click **Create your centre**, and follow the 3-step checklist on the Home screen: add a batch, add students, mark attendance.
 
-### Scripts
+**To open it on your phone:** connect the phone to the same Wi-Fi as your computer, then open `http://<your-computer's-IP>:3000`. For example `http://192.168.1.5:3000`; on Windows, find the IP with `ipconfig`.
 
-| Command | What it does |
+### Step 5: Put it online (so it works anywhere)
+
+1. Put your copy of the code on **GitHub**.
+2. In **[Vercel](https://vercel.com/new)**, click **Import** and choose your GitHub repository.
+3. Under **Environment Variables**, add the same two values from Step 3.
+4. Click **Deploy**. You'll get a link like `https://your-app.vercel.app`.
+5. Back in Supabase → **Authentication → URL Configuration**:
+   - Change **Site URL** to your Vercel link.
+   - Add `https://your-app.vercel.app/**` to **Redirect URLs**.
+6. Optional: connect your own domain (for example `mytuition.in`) in Vercel → **Settings → Domains**.
+
+### Before real centres use it
+
+- **Password-reset emails:** Supabase's built-in email only sends a few emails an hour, and only to your own team. Connect a free email service such as [Resend](https://resend.com/) in Supabase → **Authentication → Emails → SMTP Settings**.
+- **Backups:** turn on Supabase's paid plan (or take regular backups) before storing real fee records.
+- **Confirm email:** turn it back on if you turned it off in Step 2.
+
+---
+
+## Need help?
+
+| Problem | Fix |
 |---|---|
-| `npm run dev` | Start the dev server |
-| `npm run build` / `npm start` | Production build / serve it |
-| `npm run lint` | ESLint |
-| `npm run typecheck` | Generate route types and run `tsc` |
-| `npm test` | Unit tests (Vitest): formatting, phone numbers, dates, fee maths, WhatsApp templates |
-| `npm run db:types` | Regenerate `src/types/database.ts` from a linked Supabase project |
-
----
-
-## Deploying to Vercel
-
-1. Push the repo to GitHub and **Import** it in Vercel.
-2. Add the two environment variables from step 4.
-3. Deploy.
-4. In Supabase → **Authentication → URL Configuration**, set **Site URL** to your Vercel URL and add `https://<your-app>.vercel.app/auth/callback` to **Redirect URLs** (used by the email confirmation link).
-
----
-
-## Project structure
-
-```
-src/
-├─ app/
-│  ├─ (auth)/            login, signup and their Server Actions
-│  ├─ (app)/             signed-in screens (share the bottom-nav layout)
-│  │  ├─ page.tsx        dashboard (Home)
-│  │  ├─ attendance/     batch + date picker, tap-to-toggle sheet
-│  │  ├─ students/       list, add/edit, profile with calendar & fee history
-│  │  ├─ fees/           tabs, payment sheet, "remind all overdue" stepper
-│  │  ├─ tests/          tests list, marks entry sheet, share results
-│  │  ├─ batches/        list, add/edit, archive
-│  │  ├─ reminders/      reminder log + logReminder action
-│  │  ├─ more/, settings/
-│  │  └─ loading.tsx     skeleton shown while any page loads
-│  └─ auth/callback/     email-confirmation handler
-├─ components/           ui/ (shadcn), layout/, shared/, reminders/, dashboard/, attendance/
-├─ lib/                  supabase clients, formatting, dates, fees, WhatsApp templates (+ tests)
-├─ types/database.ts     typed Supabase schema
-└─ proxy.ts              session refresh + route protection
-supabase/migrations/     SQL schema, RLS and functions
-```
-
----
-
-## Roadmap ideas
-
-- Multiple staff logins per centre
-- Hindi and other regional languages
-- Installable PWA with offline attendance
+| A page shows an error right after setup | Make sure **all 9** SQL files ran in Supabase, in order. |
+| "Invalid API key" or you can't log in | Check both values in `.env.local`, then stop and restart `npm run dev`. |
+| The password-reset link doesn't open the app | Add your site address with `/**` to **Redirect URLs** in Supabase (Step 2.4 / Step 5.5). |
+| The app doesn't open on your phone | The phone and computer must be on the same Wi-Fi, and `npm run dev` must be running. |
+| WhatsApp doesn't open | The parent's number must be a valid 10-digit Indian mobile number. On a computer, WhatsApp Web opens instead. |
