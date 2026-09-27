@@ -219,7 +219,10 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
         </Link>
       </Button>
 
-      <ParentLinkCard studentId={student.id} studentName={student.name} url={parentUrl} recipients={linkRecipients} />
+      {/* Optional feature: only when switched on in Settings */}
+      {centre.parent_links_enabled && (
+        <ParentLinkCard studentId={student.id} studentName={student.name} url={parentUrl} recipients={linkRecipients} />
+      )}
 
       {/* Attendance calendar */}
       <section className="mt-8">

@@ -154,7 +154,8 @@ export async function removeStudentPhoto(studentId: string): Promise<ActionState
 /** Turns on the parent link: a long random token that is impossible to guess. */
 export async function createParentLink(studentId: string): Promise<ActionState> {
   const token = randomBytes(24).toString("base64url"); // 32 characters
-  const { supabase } = await getCentre();
+  const { supabase, centre } = await getCentre();
+  if (!centre.parent_links_enabled) return { ok: false, message: "Turn on parent links in Settings first." };
   const { error } = await supabase.from("students").update({ share_token: token }).eq("id", studentId);
   if (error) return { ok: false, message: "Could not create the link." };
 

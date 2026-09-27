@@ -5,6 +5,7 @@ import { getCentre } from "@/lib/auth";
 import { PageHeader } from "@/components/layout/page-header";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { CentreForm } from "./centre-form";
+import { ParentLinksToggle } from "./parent-links-toggle";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -19,6 +20,11 @@ export default async function SettingsPage() {
       <section className="mt-10 grid gap-3">
         <h2 className="text-lg font-bold">Appearance</h2>
         <ThemeToggle />
+      </section>
+
+      <section className="mt-10 grid gap-3">
+        <h2 className="text-lg font-bold">Parents</h2>
+        <ParentLinksToggle enabled={centre.parent_links_enabled} />
       </section>
 
       <section className="mt-10 grid gap-3">

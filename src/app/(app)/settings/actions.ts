@@ -36,3 +36,16 @@ export async function updateCentre(_prev: ActionState, formData: FormData): Prom
   revalidatePath("/", "layout");
   return { ok: true, message: "Centre details saved" };
 }
+
+/** The parent-link feature switch. Off = every parent link stops working (they come back when switched on). */
+export async function setParentLinks(enabled: boolean): Promise<ActionState> {
+  const { supabase, centre } = await getCentre();
+  const { error } = await supabase.from("centres").update({ parent_links_enabled: enabled }).eq("id", centre.id);
+  if (error) return { ok: false, message: "Could not change the setting." };
+
+  revalidatePath("/", "layout");
+  return {
+    ok: true,
+    message: enabled ? "Parent links are on" : "Parent links are off. Links already sent won't open.",
+  };
+}

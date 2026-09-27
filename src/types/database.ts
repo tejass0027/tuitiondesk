@@ -21,6 +21,7 @@ export type Database = {
           phone: string;
           address: string;
           fee_due_day: number;
+          parent_links_enabled: boolean;
           created_at: string;
         };
         Insert: {
@@ -30,6 +31,7 @@ export type Database = {
           phone?: string;
           address?: string;
           fee_due_day?: number;
+          parent_links_enabled?: boolean;
           created_at?: string;
         };
         Update: {
@@ -39,6 +41,7 @@ export type Database = {
           phone?: string;
           address?: string;
           fee_due_day?: number;
+          parent_links_enabled?: boolean;
           created_at?: string;
         };
         Relationships: [];

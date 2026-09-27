@@ -60,7 +60,12 @@ revoke all on public.holidays from anon;
 -- 3. Parent link: a secret, unguessable token per student.
 -- Anyone with the link sees ONE student's attendance, marks and fees,
 -- read-only. The owner can turn the link off (token = null) any time.
+-- The whole feature is optional: a switch in Settings, off by default.
+-- Turning it off stops every link; turning it on again brings them back.
 -- ---------------------------------------------------------------------
+alter table public.centres
+  add column parent_links_enabled boolean not null default false;
+
 alter table public.students
   add column share_token text unique check (share_token is null or char_length(share_token) between 24 and 64);
 
@@ -76,6 +81,7 @@ as $$
   with s as (
     select st.id, st.centre_id, st.name, st.class, st.joining_date, st.is_active, b.name as batch_name
       from public.students st
+      join public.centres ce on ce.id = st.centre_id and ce.parent_links_enabled
       left join public.batches b on b.id = st.batch_id
      where p_token is not null
        and char_length(p_token) >= 24
