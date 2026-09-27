@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, Plus, SearchX, Users } from "lucide-react";
+import { ChevronRight, FileSpreadsheet, Plus, SearchX, Users } from "lucide-react";
 import { getCentre } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { classLabel } from "@/lib/classes";
@@ -57,11 +57,18 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
         }
         action={
           !hasNoStudentsAtAll && (
-            <Button asChild>
-              <Link href={addHref}>
-                <Plus aria-hidden /> Add
-              </Link>
-            </Button>
+            <div className="flex gap-2">
+              <Button asChild variant="outline" size="icon" aria-label="Import from Excel">
+                <Link href="/students/import">
+                  <FileSpreadsheet aria-hidden />
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link href={addHref}>
+                  <Plus aria-hidden /> Add
+                </Link>
+              </Button>
+            </div>
           )
         }
       />
@@ -72,11 +79,18 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
           title="No students yet"
           description="Add your first student. It only needs a name, a batch and a parent's WhatsApp number."
           action={
-            <Button asChild size="lg">
-              <Link href="/students/new">
-                <Plus aria-hidden /> Add your first student
-              </Link>
-            </Button>
+            <div className="grid gap-2 sm:grid-flow-col">
+              <Button asChild size="lg">
+                <Link href="/students/new">
+                  <Plus aria-hidden /> Add your first student
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <Link href="/students/import">
+                  <FileSpreadsheet aria-hidden /> Import from Excel
+                </Link>
+              </Button>
+            </div>
           }
         />
       ) : (
