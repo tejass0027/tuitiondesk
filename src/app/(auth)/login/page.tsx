@@ -8,6 +8,7 @@ export const metadata: Metadata = { title: "Log in" };
 const ERRORS: Record<string, string> = {
   "link-expired": "That link has expired or was already used. Please log in.",
   "no-centre": "We couldn't find your centre. Please log in again.",
+  "reset-expired": "That reset link has expired or was already used. Tap “Forgot password?” to get a new one.",
 };
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {

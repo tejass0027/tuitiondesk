@@ -88,6 +88,56 @@ export async function signup(_prev: ActionState, formData: FormData): Promise<Ac
   };
 }
 
+const forgotSchema = z.object({ email: z.email("Enter a valid email address") });
+
+/** Emails a "reset your password" link. Always says "sent" so nobody can check which emails have accounts. */
+export async function sendResetLink(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const parsed = forgotSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return invalid(parsed.error, formData);
+
+  const origin = (await headers()).get("origin") ?? "";
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+    // The link logs them in, then opens the "choose a new password" page
+    redirectTo: `${origin}/auth/callback?next=/reset-password`,
+  });
+
+  if (error?.status === 429) {
+    return { ok: false, message: "Too many tries. Please wait a minute and try again.", values: parsed.data };
+  }
+  return {
+    ok: true,
+    message: `If ${parsed.data.email} has an account, a reset link is on its way. Check your inbox (and spam).`,
+  };
+}
+
+const resetSchema = z
+  .object({
+    password: z.string().min(8, "Use at least 8 characters"),
+    confirm: z.string(),
+  })
+  .refine((v) => v.password === v.confirm, { path: ["confirm"], message: "The two passwords don't match" });
+
+/** Saves the new password for the owner who opened the reset link. */
+export async function resetPassword(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const parsed = resetSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { ok: false, message: "Please check the highlighted fields.", fieldErrors: invalid(parsed.error, formData)?.fieldErrors };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+  if (error) {
+    return {
+      ok: false,
+      message:
+        error.code === "same_password"
+          ? "That's your current password. Please choose a new one."
+          : "Could not change the password. Please open the reset link again.",
+    };
+  }
+
+  redirect("/?password=changed");
+}
+
 export async function logout() {
   const supabase = await createClient();
   await supabase.auth.signOut();

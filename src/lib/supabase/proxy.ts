@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/database";
 
-const PUBLIC_PATHS = ["/login", "/signup", "/auth"];
+const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password", "/auth"];
 
 /**
  * Runs before every page request (see src/proxy.ts):
@@ -45,7 +45,7 @@ export async function updateSession(request: NextRequest) {
   if (!isLoggedIn && !isPublic) {
     return redirectKeepingCookies(request, response, "/login");
   }
-  if (isLoggedIn && (pathname === "/login" || pathname === "/signup")) {
+  if (isLoggedIn && (pathname === "/login" || pathname === "/signup" || pathname === "/forgot-password")) {
     return redirectKeepingCookies(request, response, "/");
   }
 

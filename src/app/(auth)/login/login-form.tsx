@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { ArrowRight, CircleAlert, Mail } from "lucide-react";
 import { FormField } from "@/components/shared/form-field";
 import { SubmitButton } from "@/components/shared/submit-button";
@@ -40,17 +41,25 @@ export function LoginForm({ initialError }: { initialError?: string }) {
         />
       </FormField>
 
-      <FormField label="Password" htmlFor="password" error={state?.fieldErrors?.password}>
-        <PasswordInput
-          id="password"
-          name="password"
-          autoComplete="current-password"
-          placeholder="Your password"
-          aria-invalid={Boolean(state?.fieldErrors?.password)}
-          className="h-14"
-          required
-        />
-      </FormField>
+      <div className="grid gap-1">
+        <FormField label="Password" htmlFor="password" error={state?.fieldErrors?.password}>
+          <PasswordInput
+            id="password"
+            name="password"
+            autoComplete="current-password"
+            placeholder="Your password"
+            aria-invalid={Boolean(state?.fieldErrors?.password)}
+            className="h-14"
+            required
+          />
+        </FormField>
+        <Link
+          href="/forgot-password"
+          className="justify-self-end py-1.5 text-[0.95rem] font-semibold text-primary underline-offset-4 hover:underline"
+        >
+          Forgot password?
+        </Link>
+      </div>
 
       <SubmitButton
         pending={pending}

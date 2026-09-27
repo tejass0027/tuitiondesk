@@ -2,6 +2,7 @@ import { getCentre } from "@/lib/auth";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { MobileTopBar } from "@/components/layout/mobile-top-bar";
 import { SideNav } from "@/components/layout/side-nav";
+import { FlashToast } from "@/components/shared/flash-toast";
 
 /** Shell for every signed-in screen: sidebar on desktop, top bar + bottom tabs on phones. */
 export default async function AppLayout({ children }: LayoutProps<"/">) {
@@ -18,6 +19,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         />
         <MobileTopBar centreName={centre.name} />
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-5 pb-36 sm:px-6 lg:pt-10 lg:pb-16">{children}</main>
+        <FlashToast />
       </div>
       <BottomNav />
     </div>
