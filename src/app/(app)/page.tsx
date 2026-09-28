@@ -15,6 +15,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { getCentre } from "@/lib/auth";
+import { InstallApp } from "@/components/shared/install-app";
 import { WEEK_DAYS, dayKeyOf, formatTimeRange } from "@/lib/batches";
 import { formatDate, formatINR, formatMonth, todayIST } from "@/lib/format";
 import { summarizeTotals } from "@/lib/fees";
@@ -106,6 +107,8 @@ export default async function HomePage() {
           </dl>
         )}
       </header>
+
+      <InstallApp />
 
       {hasBatches && hasStudents && (
         <nav aria-label="Quick actions" className="grid grid-cols-4 gap-2">

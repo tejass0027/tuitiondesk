@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, LogOut } from "lucide-react";
 import { getCentre } from "@/lib/auth";
+import { InstallApp } from "@/components/shared/install-app";
 import { PageHeader } from "@/components/layout/page-header";
 import { SECONDARY_NAV } from "@/components/layout/nav-items";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
@@ -44,6 +45,10 @@ export default async function MorePage() {
           </Link>
         ))}
       </nav>
+
+      <div className="mt-6">
+        <InstallApp variant="row" />
+      </div>
 
       <section className="mt-8 grid gap-3">
         <h2 className="text-lg font-bold">Appearance</h2>

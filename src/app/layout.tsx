@@ -22,11 +22,15 @@ export const metadata: Metadata = {
   description:
     "Simple attendance, fees and parent reminders for tuition and coaching centres.",
   applicationName: "TuitionDesk",
+  // iPhone: "Add to Home Screen" opens it full-screen like an app
+  appleWebApp: { capable: true, title: "TuitionDesk", statusBarStyle: "default" },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover", // use the whole screen on phones with a notch
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#faf8f4" },
     { media: "(prefers-color-scheme: dark)", color: "#1c1916" },
